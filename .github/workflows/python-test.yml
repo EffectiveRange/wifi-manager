@@ -24,6 +24,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libdbus-glib-1-dev libgirepository1.0-dev libsystemd-dev
       - name: Verify changes
-        uses: GlobalScope-HUN/python-verify-action@v1
+        uses: EffectiveRange/python-verify-github-action@v1
         with:
-          coverage-threshold: '90'
+          coverage-threshold: '95'
