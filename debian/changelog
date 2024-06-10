@@ -1,3 +1,9 @@
+wifi-manager (1.0.4) stable; urgency=medium
+
+  * Release 1.0.4
+
+ -- GitHub Action <action@github.com>  Mon, 10 Jun 2024 22:56:02 +0000
+
 wifi-manager (1.0.3) stable; urgency=medium
 
   * Release 1.0.3
