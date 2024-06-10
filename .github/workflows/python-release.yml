@@ -1,0 +1,31 @@
+name: Python release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish-and-release:
+    name: Publish and release distributions
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      discussions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Package and publish
+        uses: EffectiveRange/python-package-github-action@v1
+        with:
+          is-cross-platform: 'true'
+          debian-dist-type: 'application'
+          docker-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          docker-password: ${{ secrets.DOCKERHUB_TOKEN }}
+          devcontainer-config: 'armhf'
+          devcontainer-command: '.devcontainer/build.sh'
+      - name: Release
+        uses: EffectiveRange/version-release-github-action@v1

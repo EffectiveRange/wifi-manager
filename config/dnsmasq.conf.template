@@ -1,0 +1,16 @@
+interface={{interface}}
+listen-address={{hotspot_ip}}
+dhcp-range={{dhcp_range}}
+dhcp-option=160,http://{{hotspot_ip}}:{{server_port}}/
+enable-dbus
+domain-needed
+bogus-priv
+address=/google.com/216.58.206.131
+address=/connectivitycheck.android.com/216.58.206.131
+address=/connectivitycheck.gstatic.com/216.58.206.131
+address=/www.gstatic.com/216.58.206.99
+address=/www.apple.com/2.16.21.112
+address=/captive.apple.com/17.253.35.204
+address=/clients3.google.com/216.58.204.46
+address=/www.msftconnecttest.com/13.107.4.52
+address=/connectivitycheck.platform.hicloud.com/160.44.202.175

@@ -1,0 +1,8 @@
+{
+  "name": "armhf",
+  "image": "effectiverange/er-devc-armhf:latest",
+  "privileged": true,
+  "containerEnv": {
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+  }
+}

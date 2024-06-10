@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+    <title>Configure Wi-Fi Network</title>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="../static/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+    <form action="configure" class="form" method="post">
+        <label id="hostname">Device: {{ hostname }}</label>
+        <label for="ssid"></label><input id="ssid" name="ssid" placeholder="Enter Wi-Fi AP name" required type="text"
+                                         value="{{ ssid }}">
+        <label for="password"></label><input id="password" name="password" placeholder="Enter Wi-Fi password" required
+                                             type="password"
+                                             value="{{ password }}">
+        <button type="submit" value="Submit">Configure</button>
+        <label id="result">{{ result }}</label>
+    </form>
+</div>
+</body>
+</html>
