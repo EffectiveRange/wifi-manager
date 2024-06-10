@@ -160,7 +160,7 @@ cython_debug/
 #.idea/
 
 # debian packaging
-debian/
+debian/*
 !debian/control
 !debian/changelog
 !debian/rules
