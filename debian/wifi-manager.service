@@ -1,0 +1,12 @@
+[Unit]
+Description=Wi-Fi manager service
+After=dbus.service wpa_supplicant.service hostapd.service dnsmasq.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+ExecStart=/opt/venvs/wifi-manager/bin/python3 /opt/venvs/wifi-manager/bin/wifi-manager.py
+
+[Install]
+WantedBy=multi-user.target
