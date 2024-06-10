@@ -1,0 +1,21 @@
+
+network={
+	ssid="test-network1"
+	psk="test-password1"
+	disabled=0
+	priority=0
+}
+
+network={
+	ssid=test-network2
+	psk=test-password2
+	disabled=1
+	priority=1
+}
+
+network={
+	ssid="test-network3"
+	psk="test-password3"
+	disabled=0
+	priority=2
+}

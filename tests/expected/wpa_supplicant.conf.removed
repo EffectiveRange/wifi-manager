@@ -1,0 +1,7 @@
+
+network={
+	ssid="test-network1"
+	psk="test-password1"
+	disabled=0
+	priority=0
+}
