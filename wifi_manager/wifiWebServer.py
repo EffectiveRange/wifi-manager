@@ -77,6 +77,7 @@ class WifiWebServer(IWebServer):
             self._is_running = True
             self._server.run()
         except Exception as error:
+            self._is_running = False
             log.info('Shutdown', reason=error)
 
     def shutdown(self) -> None:

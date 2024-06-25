@@ -26,6 +26,6 @@ jobs:
           docker-username: ${{ secrets.DOCKERHUB_USERNAME }}
           docker-password: ${{ secrets.DOCKERHUB_TOKEN }}
           devcontainer-config: 'armhf'
-          devcontainer-command: 'chmod +x .devcontainer/build.sh && .devcontainer/build.sh'
+          devcontainer-command: '/bin/bash .devcontainer/build.sh'
       - name: Release
         uses: EffectiveRange/version-release-github-action@v1

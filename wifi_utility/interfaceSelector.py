@@ -21,6 +21,8 @@ class WlanInterfaceSelector(InterfaceSelector):
         self._platform = platform
 
     def select(self, interface: str) -> str:
+        self._platform.enable_wlan_interfaces()
+
         interfaces = self._platform.get_wlan_interfaces()
 
         if not interfaces:

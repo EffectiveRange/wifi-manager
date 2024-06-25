@@ -1,20 +1,8 @@
-import platform
-
 from setuptools import setup
-
-
-def get_platform_name() -> str:
-    return platform.system().lower() + '-' + platform.machine().lower()
-
 
 setup(
     name='wifi-manager',
     version='1.0.4',
-    options={
-        'bdist_wheel': {
-            'plat_name': get_platform_name(),
-        },
-    },
     description='Wi-Fi management: switching to AP mode if unable to connect to any configured network as a client',
     author='Ferenc Nandor Janky & Attila Gombos',
     author_email='info@effective-range.com',

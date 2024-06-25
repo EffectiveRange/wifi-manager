@@ -55,7 +55,7 @@ class WpaServiceTest(TestCase):
         dependencies.systemd.reload_daemon.assert_not_called()
         dependencies.systemd.restart_service.assert_not_called()
 
-    def test_start_unblocks_wlan_removes_run_file_and_starts_dhcp_client(self):
+    def test_start_removes_run_file_and_starts_dhcp_client(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
         wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE,
@@ -66,11 +66,10 @@ class WpaServiceTest(TestCase):
         wpa_service.start()
 
         # Then
-        dependencies.platform.enable_wlan_interfaces.assert_called_once()
         self.assertFalse(exists(f'{self.WPA_RUN_DIR}/wlan0'))
         dhcp_client.start.assert_called_once()
 
-    def test_restart_unblocks_wlan_removes_run_file_and_starts_dhcp_client(self):
+    def test_restart_removes_run_file_and_starts_dhcp_client(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
         wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE,
@@ -81,7 +80,6 @@ class WpaServiceTest(TestCase):
         wpa_service.restart()
 
         # Then
-        dependencies.platform.enable_wlan_interfaces.assert_called_once()
         self.assertFalse(exists(f'{self.WPA_RUN_DIR}/wlan0'))
         dhcp_client.start.assert_called_once()
 
