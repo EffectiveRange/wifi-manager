@@ -27,6 +27,7 @@ class InterfaceSelectorTest(TestCase):
 
         # Then
         self.assertEqual('wlan0', interface)
+        platform.enable_wlan_interfaces.assert_called_once()
 
     def test_specified_interface_selected_when_multiple_available(self):
         # Given

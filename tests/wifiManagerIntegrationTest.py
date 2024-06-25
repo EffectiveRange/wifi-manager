@@ -248,15 +248,12 @@ def get_dhcp_server_service(services: list[IService]) -> DnsmasqService:
 
 
 def wait_for_initialization(web_server: WifiWebServer) -> None:
-    wait_for_condition(1, lambda server: server.is_running(), web_server)
+    wait_for_condition(5, lambda server: server.is_running(), web_server)
 
 
 def trigger_event(target: Any, args: Optional[list[Any]] = None) -> None:
-    event_thread = None
-    if args is None:
-        event_thread = Thread(target=target)
-    else:
-        event_thread = Thread(target=target, args=args)
+    event_thread = Thread(target=target, args=args) if args else Thread(target=target)
+
     event_thread.start()
     event_thread.join()
 

@@ -80,7 +80,6 @@ class WpaService(WifiClientService):
         self._wpa_config.add_network(wpa_config_network)
 
     def _prepare_start(self) -> None:
-        self._platform.enable_wlan_interfaces()
         delete_file(self._run_file)
         self._dhcp_client.start()
 

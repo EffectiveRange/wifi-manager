@@ -2,7 +2,7 @@
 .PHONY: clean package
 
 clean:
-	rm -rf build dist wifi_manager.egg-info
+	rm -rf build dist *.egg-info
 
 package:
 	apt-get update
