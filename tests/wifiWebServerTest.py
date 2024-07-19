@@ -263,7 +263,7 @@ def create_configuration(hotspot_ip='192.168.100.1', server_port=0):
 
 
 def create_mocks():
-    return MagicMock(spec=IPlatform), MagicMock(IEventHandler)
+    return MagicMock(spec=IPlatform), MagicMock(spec=IEventHandler)
 
 
 if __name__ == '__main__':
