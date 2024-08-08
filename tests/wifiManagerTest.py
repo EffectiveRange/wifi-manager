@@ -159,6 +159,18 @@ class WifiManagerTest(TestCase):
             # Then
             wifi_control.start_client_mode.assert_called()
 
+    def test_client_mode_restarted_when_in_client_mode_and_no_ip_address(self):
+        # Given
+        wifi_status = {'ssid': 'test-network', 'ip': None, 'mac': '00:11:22:33:44:55'}
+        services, wifi_control, event_handler, web_server, ssdp_server = create_mocks(wifi_status=wifi_status)
+
+        with WifiManager(services, wifi_control, event_handler, web_server, ssdp_server) as wifi_manager:
+            # When
+            wifi_manager.run()
+
+            # Then
+            wifi_control.start_client_mode.assert_called()
+
     def test_client_mode_started_when_in_client_mode_and_hotspot_ip_is_set(self):
         # Given
         wifi_status = {'ssid': 'test-network', 'ip': '192.168.100.1', 'mac': '00:11:22:33:44:55'}

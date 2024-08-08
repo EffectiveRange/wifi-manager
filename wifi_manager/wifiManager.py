@@ -84,6 +84,9 @@ class WifiManager(object):
             elif self._wifi_control.is_hotspot_ip_set():
                 log.info('Removing static IP address, restarting client mode')
                 start_client = True
+            elif not initial_status['ip']:
+                log.info('No IP address acquired, restarting client mode')
+                start_client = True
 
         if start_client:
             self._wifi_control.start_client_mode()
