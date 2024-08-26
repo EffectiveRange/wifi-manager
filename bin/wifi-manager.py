@@ -4,10 +4,10 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
-import argparse
 import os
-import signal
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter, BooleanOptionalAction
 from pathlib import Path
+from signal import signal, SIGINT, SIGTERM
 from threading import Thread
 from typing import Any
 
@@ -119,8 +119,8 @@ def main() -> None:
             log.info('Shutting down wifi-manager', signum=signum)
             wifi_manager.shutdown()
 
-        signal.signal(signal.SIGINT, handler)
-        signal.signal(signal.SIGTERM, handler)
+        signal(SIGINT, handler)
+        signal(SIGTERM, handler)
 
         event_loop = GLib.MainLoop()
         event_thread = Thread(target=event_loop.run)
@@ -133,7 +133,7 @@ def main() -> None:
 
 
 def _get_arguments() -> dict[str, Any]:
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--config-file', help='configuration file', default='/etc/wifi-manager.conf')
     parser.add_argument('--log-file', help='log file path',
                         default='/var/log/effective-range/wifi-manager/wifi-manager.log')
@@ -149,8 +149,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument('--preferred-interface', help='preferred wlan interface')
     parser.add_argument('--hostname-pattern', help='hostname pattern')
 
-    parser.add_argument('--ssdp-enabled', help='start optional SSDP server',
-                        action=argparse.BooleanOptionalAction)
+    parser.add_argument('--ssdp-enabled', help='start optional SSDP server', action=BooleanOptionalAction)
     parser.add_argument('--ssdp-usn-pattern', help='SSDP USN pattern')
     parser.add_argument('--ssdp-st-pattern', help='SSDP service type pattern')
 

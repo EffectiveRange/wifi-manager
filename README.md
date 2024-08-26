@@ -1,3 +1,7 @@
+
+[![Test and Release](https://github.com/EffectiveRange/wifi-manager/actions/workflows/test_and_release.yml/badge.svg)](https://github.com/EffectiveRange/wifi-manager/actions/workflows/test_and_release.yml)
+[![Coverage badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/EffectiveRange/wifi-manager/python-coverage-comment-action-data/endpoint.json)](https://htmlpreview.github.io/?https://github.com/EffectiveRange/wifi-manager/blob/python-coverage-comment-action-data/htmlcov/index.html)
+
 # Wi-Fi Manager
 
 Wi-Fi management: switching to AP mode if unable to connect to any configured network as a client
@@ -123,7 +127,7 @@ binary and also as a systemd service.
 
 The service descriptor file's `ExecStart` should be appended by the interface `wlan0` and the configuration file path.
 
-```commandline
+```bash
 $ cat /lib/systemd/system/wpa_supplicant.service
 [Unit]
 Description=WPA supplicant
@@ -148,7 +152,7 @@ Its configuration file stores the added networks as a persistent database.
 
 We can add our default network configuration here:
 
-```commandline
+```bash
 $ cat /etc/wpa_supplicant/wpa_supplicant.conf
 ctrl_interface=/run/wpa_supplicant
 update_config=1
@@ -169,7 +173,7 @@ This daemon is provided by default and started up automatically.
 This also starts up a WPA supplicant instance that holds the control interface `/run/wpa_supplicant/wlan0` and prevents
 `wpa_supplicant.service` to manage it.
 
-```commandline
+```bash
 $ sudo systemctl status dhcpcd.service | grep wlan0
              ├─564 wpa_supplicant -B -c/etc/wpa_supplicant/wpa_supplicant.conf -iwlan0
 ```
@@ -180,7 +184,7 @@ To prevent this, the configuration file should be appended:
 
 To remove the hook from `wpa_supplicant`
 
-```commandline
+```bash
 $ tail -2 /etc/dhcpcd.conf
 interface wlan0
 nohook wpa_supplicant
@@ -188,7 +192,7 @@ nohook wpa_supplicant
 
 For the access point to be able to assign the device an IP address, any static IP configuration needs to be deleted:
 
-```commandline
+```bash
 sudo ifconfig wlan0 0.0.0.0
 ```
 
@@ -199,7 +203,7 @@ sudo ifconfig wlan0 0.0.0.0
 This is the application we need to manage hotspot (access point) mode on our edge device. It is not available by
 default, so we need to install it. It will be available as a systemd service.
 
-```commandline
+```bash
 $ sudo apt install hostapd
 $ sudo systemctl unmask hostapd
 $ sudo systemctl enable hostapd
@@ -211,7 +215,7 @@ To configure the hotspot settings the configuration file should be edited:
 
 `/etc/hostapd/hostapd.conf`
 
-```commandline
+```bash
 $ cat /etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
@@ -234,7 +238,7 @@ rsn_pairwise=CCMP
 This daemon can control the IP range and lease time for the connected peers. It is not available by defult, so
 we will need to install it. It will be available as a systemd service.
 
-```commandline
+```bash
 $ sudo apt install dnsmasq
 $ sudo systemctl unmask dnsmasq
 $ sudo systemctl enable dnsmasq
@@ -244,7 +248,7 @@ Its configuration file can be edited to set up the IP range and the lease time (
 
 `/etc/dnsmasq.conf`
 
-```commandline
+```bash
 $ cat /etc/dnsmasq.conf
 interface=wlan0
 dhcp-range=192.168.100.2,192.168.100.254,255.255.255.0,2m
@@ -257,7 +261,7 @@ take into account the connected peers.
 In order to act as a gateway for the connected peers, a static IP should be set for the device which is in the same
 subnet. This can be done via the DHCP client daemon configuration or dynamically with `ifconfig`:
 
-```commandline
+```bash
 sudo ifconfig wlan0 192.168.100.1 netmask 255.255.255.0 broadcast 192.168.100.255
 ```
 
@@ -267,7 +271,7 @@ Also, there is a persisted list of leases:
 
 Containing the Epoch time of lease expiry, MAC, IP and device name
 
-```commandline
+```bash
 $ cat /var/lib/misc/dnsmasq.leases
 1693133322 02:c0:e1:7c:35:34 192.168.100.118 Samsung-S20_1234 01:02:c0:e1:7c:35:34
 ```

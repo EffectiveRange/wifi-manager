@@ -11,7 +11,9 @@ make clean
 rsync -av --exclude ".git" --exclude "*cache" --mkpath "$WORKSPACE/" "$BUILDROOT$WORKSPACE/"
 
 # Build distribution packages
-schroot -p -c buildroot -- make package
+schroot -p -c buildroot -- apt update
+schroot -p -c buildroot -- apt install packaging-tools
+schroot -p -c buildroot -- pack_python . --all
 
 # Copy packages to workspace
 rsync -av \
