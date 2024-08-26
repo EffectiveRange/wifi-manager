@@ -60,5 +60,6 @@ jobs:
           container-config: 'armhf-container'
           debian-dist-command: 'sudo /bin/bash build.sh'
           install-packaging-tools: 'false'
+          add-wheel-dist: 'false'
       - name: Release
         uses: EffectiveRange/version-release-github-action@v1
