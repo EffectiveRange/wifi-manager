@@ -38,14 +38,15 @@ class WebServerConfig(object):
 
 class WifiWebServer(IWebServer):
 
-    def __init__(self, configuration: WebServerConfig, platform: IPlatform,
-                 event_handler: IEventHandler) -> None:
+    def __init__(self, configuration: WebServerConfig, platform: IPlatform, event_handler: IEventHandler) -> None:
         self._configuration = configuration
         self._platform = platform
         self._event_handler = event_handler
-        self._app = Flask(__name__,
-                          template_folder=f'{self._configuration.resource_root}/templates',
-                          static_folder=f'{self._configuration.resource_root}/static')
+        self._app = Flask(
+            __name__,
+            template_folder=f'{self._configuration.resource_root}/templates',
+            static_folder=f'{self._configuration.resource_root}/static',
+        )
         self._hotspot_host = f'{self._configuration.hotspot_ip}:{self._configuration.server_port}'
         self._server = create_server(self._app, listen=f'*:{self._configuration.server_port}')
         self._is_running = False
@@ -78,13 +79,17 @@ class WifiWebServer(IWebServer):
             self._server.run()
         except Exception as error:
             self._is_running = False
-            log.info('Shutdown', reason=error)
+            log.info('Server exited', reason=error)
 
     def shutdown(self) -> None:
         log.info('Shutting down')
-        self._platform.clean_up_ip_tables()
-        self._server.close()
-        self._is_running = False
+        try:
+            self._platform.clean_up_ip_tables()
+            self._server.close()
+        except Exception as error:
+            log.info('Shutdown', reason=error)
+        finally:
+            self._is_running = False
 
     def is_running(self) -> bool:
         return self._is_running
@@ -130,8 +135,7 @@ class WifiWebServer(IWebServer):
             if configuration:
                 self._network_configured = self._event_handler.on_add_network_requested(configuration)
 
-            return ('Configured network', 200) if self._network_configured \
-                else ('Failed to configure network', 400)
+            return ('Configured network', 200) if self._network_configured else ('Failed to configure network', 400)
 
         @self._app.route('/api/identify', methods=['POST'])
         def identify_by_api() -> tuple[str, int]:
@@ -139,8 +143,7 @@ class WifiWebServer(IWebServer):
 
             signal_sent = self._event_handler.on_identify_requested()
 
-            return ('Identification signal sent', 200) if signal_sent else \
-                ('Failed to send identification signal', 400)
+            return ('Identification signal sent', 200) if signal_sent else ('Failed to send identification signal', 400)
 
     def _set_up_web_endpoints(self) -> None:
 
@@ -160,8 +163,9 @@ class WifiWebServer(IWebServer):
 
                 result = 'Configured network' if self._network_configured else 'Failed to configure network'
 
-                return render_template('configure.html', hostname=self._hostname, ssid=ssid, password=password,
-                                       result=result)
+                return render_template(
+                    'configure.html', hostname=self._hostname, ssid=ssid, password=password, result=result
+                )
 
             return render_template('configure.html', hostname=self._hostname, ssid='', password='', result='...')
 

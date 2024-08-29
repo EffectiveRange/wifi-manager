@@ -18,7 +18,7 @@ class SsdpServerTest(TestCase):
 
     def test_startup_and_shutdown(self):
         # Given
-        with SsdpServer('test-host', 'test-role', 1) as ssdp_server:
+        with SsdpServer('test-host', 'test-role') as ssdp_server:
             # When
             ssdp_server.start('1.2.3.4')
 
@@ -31,7 +31,7 @@ class SsdpServerTest(TestCase):
 
     def test_not_started_when_location_is_invalid(self):
         # Given
-        with SsdpServer('test-host', 'test-role', 1) as ssdp_server:
+        with SsdpServer('test-host', 'test-role') as ssdp_server:
             # When
             ssdp_server.start('')
 
@@ -40,7 +40,7 @@ class SsdpServerTest(TestCase):
 
     def test_responds_to_discovery_request(self):
         # Given
-        with SsdpServer('test-host', 'test-role', 1) as ssdp_server:
+        with SsdpServer('test-host', 'test-role') as ssdp_server:
             ssdp_server.start('1.2.3.4')
 
             # When

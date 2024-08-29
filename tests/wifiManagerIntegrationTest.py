@@ -9,12 +9,28 @@ from cysystemd.reader import JournalReader
 from dbus import SystemBus
 from systemd_dbus import Systemd
 
-from tests import wait_for_assertion, RESOURCE_ROOT, wait_for_condition, TEST_FILE_SYSTEM_ROOT, delete_directory, \
-    copy_file, TEST_RESOURCE_ROOT
+from tests import (
+    wait_for_assertion,
+    RESOURCE_ROOT,
+    wait_for_condition,
+    TEST_FILE_SYSTEM_ROOT,
+    delete_directory,
+    copy_file,
+    TEST_RESOURCE_ROOT,
+)
 from wifi_event import WifiEventType
 from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl
-from wifi_service import DnsmasqConfig, HostapdConfig, ServiceDependencies, AvahiService, DhcpcdService, \
-    DnsmasqService, WpaService, HostapdService, IService
+from wifi_service import (
+    DnsmasqConfig,
+    HostapdConfig,
+    ServiceDependencies,
+    AvahiService,
+    DhcpcdService,
+    DnsmasqService,
+    WpaService,
+    HostapdService,
+    IService,
+)
 from wifi_utility import IReusableTimer, IPlatform, SsdpServer, ServiceJournal
 from wifi_wpa import WpaConfig, WpaDbus
 
@@ -96,10 +112,7 @@ class WifiManagerIntegrationTest(TestCase):
 
             # Then
             systemd.stop_service.assert_called_once_with('wpa_supplicant')
-            systemd.start_service.assert_has_calls([
-                mock.call('dnsmasq'),
-                mock.call('hostapd')
-            ])
+            systemd.start_service.assert_has_calls([mock.call('dnsmasq'), mock.call('hostapd')])
 
     def test_switched_back_to_client_when_peer_connection_timed_out(self):
         # Given
@@ -125,10 +138,7 @@ class WifiManagerIntegrationTest(TestCase):
 
             # Then
             systemd.stop_service.assert_called_once_with('hostapd')
-            systemd.start_service.assert_has_calls([
-                mock.call('dhcpcd'),
-                mock.call('wpa_supplicant')
-            ])
+            systemd.start_service.assert_has_calls([mock.call('dhcpcd'), mock.call('wpa_supplicant')])
 
     def test_timer_cancelled_when_peer_connected_to_hotspot(self):
         # Given
@@ -180,10 +190,7 @@ class WifiManagerIntegrationTest(TestCase):
             # Then
             event_thread.join()
             systemd.stop_service.assert_called_once_with('hostapd')
-            systemd.start_service.assert_has_calls([
-                mock.call('dhcpcd'),
-                mock.call('wpa_supplicant')
-            ])
+            systemd.start_service.assert_has_calls([mock.call('dhcpcd'), mock.call('wpa_supplicant')])
 
     def test_switched_back_to_client_when_new_network_configured(self):
         # Given
@@ -213,10 +220,7 @@ class WifiManagerIntegrationTest(TestCase):
             # Then
             self.assertEqual(200, response.status_code)
             wait_for_assertion(1, systemd.stop_service.assert_called_once_with, 'hostapd')
-            systemd.start_service.assert_has_calls([
-                mock.call('dhcpcd'),
-                mock.call('wpa_supplicant')
-            ])
+            systemd.start_service.assert_has_calls([mock.call('dhcpcd'), mock.call('wpa_supplicant')])
 
 
 def get_wifi_client_service(services: list[IService]) -> WpaService:
@@ -306,15 +310,19 @@ def setup_components(platform: IPlatform, systemd: Systemd, timer: IReusableTime
     hostapd_config = HostapdConfig(interface, mac_address, hostname, password)
     service_dependencies = ServiceDependencies(platform, systemd, ServiceJournal(reader))
 
-    dns_client_service = AvahiService(service_dependencies, hostname, hosts_config=hosts_config_file,
-                                      hostname_config=hostname_config_file)
+    dns_client_service = AvahiService(
+        service_dependencies, hostname, hosts_config=hosts_config_file, hostname_config=hostname_config_file
+    )
     dhcp_client_service = DhcpcdService(service_dependencies, system_bus, interface, config_file=dhcpcd_config_file)
-    dhcp_server_service = DnsmasqService(service_dependencies, system_bus, dnsmasq_config, RESOURCE_ROOT,
-                                         config_file=dnsmasq_config_file)
-    wifi_client_service = WpaService(service_dependencies, wpa_config, wpa_dbus, dhcp_client_service,
-                                     service_file=wpa_service_file)
-    wifi_hotspot_service = HostapdService(service_dependencies, hostapd_config, dhcp_server_service, RESOURCE_ROOT,
-                                          config_file=hostapd_config_file)
+    dhcp_server_service = DnsmasqService(
+        service_dependencies, system_bus, dnsmasq_config, RESOURCE_ROOT, config_file=dnsmasq_config_file
+    )
+    wifi_client_service = WpaService(
+        service_dependencies, wpa_config, wpa_dbus, dhcp_client_service, service_file=wpa_service_file
+    )
+    wifi_hotspot_service = HostapdService(
+        service_dependencies, hostapd_config, dhcp_server_service, RESOURCE_ROOT, config_file=hostapd_config_file
+    )
 
     dns_client_service._config_reloaded.set()
     dhcp_client_service._config_reloaded.set()
@@ -323,13 +331,17 @@ def setup_components(platform: IPlatform, systemd: Systemd, timer: IReusableTime
     wifi_hotspot_service._config_reloaded.set()
 
     wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
-    ssdp_server = SsdpServer('test-hostname', 'test', timeout=1)
+    ssdp_server = SsdpServer('test-hostname', 'test')
     event_handler = WifiEventHandler(wifi_control, timer, 15, 120, ssdp_server)
     web_server_config = WebServerConfig(hotspot_ip, server_port, RESOURCE_ROOT)
     web_server = WifiWebServer(web_server_config, platform, event_handler)
 
     services: list[IService] = [
-        dns_client_service, dhcp_client_service, dhcp_server_service, wifi_client_service, wifi_hotspot_service
+        dns_client_service,
+        dhcp_client_service,
+        dhcp_server_service,
+        wifi_client_service,
+        wifi_hotspot_service,
     ]
 
     return services, wifi_control, event_handler, web_server, ssdp_server

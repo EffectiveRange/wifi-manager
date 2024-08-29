@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
+from _socket import SHUT_RDWR
 from threading import Thread
 from typing import Optional, Any
 
@@ -27,8 +28,9 @@ class ISsdpServer:
 class SsdpServer(ISsdpServer):
 
     @staticmethod
-    def create(ssdp_enabled: bool, ssdp_usn_pattern: str, ssdp_st_pattern: str, id_context: dict[str, str]) \
-            -> Optional[ISsdpServer]:
+    def create(
+        ssdp_enabled: bool, ssdp_usn_pattern: str, ssdp_st_pattern: str, id_context: dict[str, str]
+    ) -> Optional[ISsdpServer]:
         if ssdp_enabled:
             usn = Template(ssdp_usn_pattern).render(id_context)
             st = Template(ssdp_st_pattern).render(id_context)
@@ -36,10 +38,9 @@ class SsdpServer(ISsdpServer):
         else:
             return None
 
-    def __init__(self, usn: str, st: str, timeout: int = 0, ) -> None:
+    def __init__(self, usn: str, st: str) -> None:
         self._usn = usn
         self._st = st
-        self._timeout = timeout
         self._server: Optional[SSDPServer] = None
         self._thread: Optional[Thread] = None
         self._location: Optional[str] = None
@@ -58,19 +59,25 @@ class SsdpServer(ISsdpServer):
             self._location = location
 
         self.shutdown()
-        self._server = SSDPServer(self._usn, location=location, device_type=self._st)
-        if self._timeout > 0:
-            self._server.sock.settimeout(self._timeout)
-        self._thread = Thread(target=self._start_server)
+
         log.info('Starting SSDP server', usn=self._usn, service_type=self._st, location=location)
+        self._server = SSDPServer(self._usn, location=location, device_type=self._st)
+        self._thread = Thread(target=self._start_server)
         self._thread.start()
 
     def shutdown(self) -> None:
-        if self._server and self._thread:
-            log.info('Shutting down')
-            self._server.stopped = True
-            self._server.sock.close()
-            self._thread.join(1)
+        try:
+            if self._server:
+                log.info('Shutting down')
+                self._server.stopped = True
+                self._server.sock.shutdown(SHUT_RDWR)
+        except Exception as error:
+            log.info('Shutdown', reason=error)
+        finally:
+            if self._server:
+                self._server.sock.close()
+            if self._thread:
+                self._thread.join(1)
 
     def get_location(self) -> Optional[str]:
         return self._location
@@ -80,4 +87,4 @@ class SsdpServer(ISsdpServer):
             if self._server:
                 self._server.serve_forever()
         except Exception as error:
-            log.info('Shutdown', reason=error)
+            log.info('Server exited', reason=error)
