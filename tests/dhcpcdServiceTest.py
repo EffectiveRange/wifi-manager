@@ -2,11 +2,13 @@ import unittest
 from unittest import TestCase
 from unittest.mock import MagicMock
 
+from common_utility import delete_directory, copy_file
 from context_logger import setup_logging
 from dbus import SystemBus
 from systemd_dbus import Systemd
+from test_utility import compare_files
 
-from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT, delete_directory, copy_file, compare_files
+from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_event import WifiEventType
 from wifi_service import DhcpcdService, ServiceDependencies, ServiceError
 from wifi_utility import IPlatform, IJournal
@@ -42,7 +44,7 @@ class DhcpcdServiceTest(TestCase):
     def test_setup_raises_service_error_when_failed_to_update_config_file(self):
         # Given
         dependencies, system_bus = create_components()
-        dhcpcd_service = DhcpcdService(dependencies, system_bus, 'wlan0', None)
+        dhcpcd_service = DhcpcdService(dependencies, system_bus, 'wlan0', '')
 
         # When
         self.assertRaises(ServiceError, dhcpcd_service.setup)

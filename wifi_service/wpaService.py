@@ -7,11 +7,11 @@ import os.path
 from enum import Enum
 from typing import Any, Optional
 
+from common_utility import delete_file, is_file_matches_pattern
 from context_logger import get_logger
 
 from wifi_event import WifiEventType
 from wifi_service import WifiClientService, IService, ServiceDependencies
-from wifi_utility import is_file_matches_pattern, delete_file
 from wifi_wpa import IWpaDbus, IWpaConfig
 
 log = get_logger('WpaService')
@@ -39,10 +39,15 @@ class WpaSupplicantEvent(Enum):
 class WpaService(WifiClientService):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/wpa_5fsupplicant_2eservice'
 
-    def __init__(self, dependencies: ServiceDependencies, wpa_config: IWpaConfig, wpa_dbus: IWpaDbus,
-                 dhcp_client: IService,
-                 service_file: str = '/lib/systemd/system/wpa_supplicant.service',
-                 run_dir: str = '/run/wpa_supplicant') -> None:
+    def __init__(
+        self,
+        dependencies: ServiceDependencies,
+        wpa_config: IWpaConfig,
+        wpa_dbus: IWpaDbus,
+        dhcp_client: IService,
+        service_file: str = '/lib/systemd/system/wpa_supplicant.service',
+        run_dir: str = '/run/wpa_supplicant',
+    ) -> None:
         super().__init__('wpa_supplicant', self._SYSTEMD_DBUS_PATH, dependencies)
         self._wpa_config = wpa_config
         self._wpa_dbus = wpa_dbus
@@ -112,7 +117,7 @@ class WpaService(WifiClientService):
             'ssid': network['ssid'],
             'psk': network['password'],
             'disabled': int(not network['enabled']),
-            'priority': network['priority']
+            'priority': network['priority'],
         }
 
     def _convert_to_wpa_config_network(self, wpa_dbus_network: dict[str, Any]) -> dict[str, Any]:

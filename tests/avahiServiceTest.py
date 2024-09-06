@@ -2,10 +2,12 @@ import unittest
 from unittest import TestCase
 from unittest.mock import MagicMock
 
+from common_utility import copy_file
 from context_logger import setup_logging
 from systemd_dbus import Systemd
+from test_utility import compare_files
 
-from tests import TEST_FILE_SYSTEM_ROOT, copy_file, TEST_RESOURCE_ROOT, compare_files
+from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_service import AvahiService, ServiceDependencies, ServiceError
 from wifi_utility import IPlatform, IJournal
 

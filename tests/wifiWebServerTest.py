@@ -4,8 +4,9 @@ from unittest import TestCase
 from unittest.mock import MagicMock
 
 from context_logger import setup_logging
+from test_utility import wait_for_assertion
 
-from tests import wait_for_assertion, RESOURCE_ROOT
+from tests import RESOURCE_ROOT
 from wifi_manager import WifiWebServer, IEventHandler, WebServerConfig
 from wifi_utility import IPlatform
 
@@ -30,8 +31,7 @@ class WifiWebServerTest(TestCase):
 
             # Then
             wait_for_assertion(1, platform.clean_up_ip_tables.assert_called_once)
-            wait_for_assertion(1, platform.set_up_ip_tables.assert_called_with,
-                               '192.168.100.1', '192.168.100.1:8080')
+            wait_for_assertion(1, platform.set_up_ip_tables.assert_called_with, '192.168.100.1', '192.168.100.1:8080')
 
         platform.clean_up_ip_tables.assert_called()
 
@@ -50,7 +50,8 @@ class WifiWebServerTest(TestCase):
 
             # Then
             event_handler.on_add_network_requested.assert_called_with(
-                {'ssid': 'test-ssid', 'password': 'test-password'})
+                {'ssid': 'test-ssid', 'password': 'test-password'}
+            )
             self.assertEqual(200, response.status_code)
 
     def test_returned_400_when_failed_to_configure_network_by_api(self):
@@ -68,7 +69,8 @@ class WifiWebServerTest(TestCase):
 
             # Then
             event_handler.on_add_network_requested.assert_called_with(
-                {'ssid': 'test-ssid', 'password': 'test-password'})
+                {'ssid': 'test-ssid', 'password': 'test-password'}
+            )
             self.assertEqual(400, response.status_code)
 
     def test_returned_400_when_api_called_with_invalid_request(self):
@@ -185,7 +187,8 @@ class WifiWebServerTest(TestCase):
 
             # Then
             event_handler.on_add_network_requested.assert_called_with(
-                {'ssid': 'test-ssid', 'password': 'test-password'})
+                {'ssid': 'test-ssid', 'password': 'test-password'}
+            )
             self.assertIn('Configured network', response.text)
 
     def test_returned_failure_when_failed_to_configure_network_by_web(self):
@@ -203,7 +206,8 @@ class WifiWebServerTest(TestCase):
 
             # Then
             event_handler.on_add_network_requested.assert_called_with(
-                {'ssid': 'test-ssid', 'password': 'test-password'})
+                {'ssid': 'test-ssid', 'password': 'test-password'}
+            )
             self.assertIn('Failed to configure network', response.text)
 
     def test_returned_failure_when_web_called_with_invalid_request(self):

@@ -4,20 +4,14 @@ from typing import Any, Optional
 from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
+from common_utility import delete_directory, IReusableTimer, copy_file
 from context_logger import setup_logging
 from cysystemd.reader import JournalReader
 from dbus import SystemBus
 from systemd_dbus import Systemd
+from test_utility import wait_for_assertion, wait_for_condition
 
-from tests import (
-    wait_for_assertion,
-    RESOURCE_ROOT,
-    wait_for_condition,
-    TEST_FILE_SYSTEM_ROOT,
-    delete_directory,
-    copy_file,
-    TEST_RESOURCE_ROOT,
-)
+from tests import RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_event import WifiEventType
 from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl
 from wifi_service import (
@@ -31,7 +25,7 @@ from wifi_service import (
     HostapdService,
     IService,
 )
-from wifi_utility import IReusableTimer, IPlatform, SsdpServer, ServiceJournal
+from wifi_utility import IPlatform, SsdpServer, ServiceJournal
 from wifi_wpa import WpaConfig, WpaDbus
 
 

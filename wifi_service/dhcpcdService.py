@@ -4,12 +4,12 @@
 
 from typing import Any
 
+from common_utility import is_file_matches_pattern, append_file
 from context_logger import get_logger
 from dbus import SystemBus
 
 from wifi_event import WifiEventType
 from wifi_service import Service, ServiceDependencies
-from wifi_utility import is_file_matches_pattern, append_file
 
 log = get_logger('DhcpcdService')
 
@@ -19,8 +19,13 @@ class DhcpcdService(Service):
     _DHCPCD_DBUS_PATH = '/name/marples/roy/dhcpcd'
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/dhcpcd_2eservice'
 
-    def __init__(self, dependencies: ServiceDependencies, system_bus: SystemBus, interface: str,
-                 config_file: str = '/etc/dhcpcd.conf') -> None:
+    def __init__(
+        self,
+        dependencies: ServiceDependencies,
+        system_bus: SystemBus,
+        interface: str,
+        config_file: str = '/etc/dhcpcd.conf',
+    ) -> None:
         super().__init__('dhcpcd', self._SYSTEMD_DBUS_PATH, dependencies)
         self._system_bus = system_bus
         self._interface = interface
