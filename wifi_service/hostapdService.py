@@ -5,11 +5,11 @@
 from enum import Enum
 from typing import Any, Optional
 
+from common_utility import render_template_file, is_file_contains_lines, create_file
 from context_logger import get_logger
 
 from wifi_event import WifiEventType
 from wifi_service import WifiHotspotService, ServiceDependencies, DhcpServerService
-from wifi_utility import render_template_file, is_file_contain_lines, write_file
 
 log = get_logger('HostapdService')
 
@@ -43,17 +43,22 @@ class HostapdConfig(object):
             'interface': self.interface,
             'mac_address': self.mac_address,
             'ssid': self.ssid,
-            'password': self.password
+            'password': self.password,
         }
 
 
 class HostapdService(WifiHotspotService):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/hostapd_2eservice'
 
-    def __init__(self, dependencies: ServiceDependencies, config: HostapdConfig, dhcp_server: DhcpServerService,
-                 resource_root: str,
-                 template_file: str = 'config/hostapd.conf.template',
-                 config_file: str = '/etc/hostapd/hostapd.conf') -> None:
+    def __init__(
+        self,
+        dependencies: ServiceDependencies,
+        config: HostapdConfig,
+        dhcp_server: DhcpServerService,
+        resource_root: str,
+        template_file: str = 'config/hostapd.conf.template',
+        config_file: str = '/etc/hostapd/hostapd.conf',
+    ) -> None:
         super().__init__('hostapd', self._SYSTEMD_DBUS_PATH, dependencies)
         self._config_file = config_file
         self._config = config
@@ -85,11 +90,11 @@ class HostapdService(WifiHotspotService):
 
     def _need_config_setup(self) -> bool:
         expected_config = self._configuration.splitlines()
-        return not is_file_contain_lines(self._config_file, expected_config)
+        return not is_file_contains_lines(self._config_file, expected_config)
 
     def _setup_config(self) -> None:
         log.info('Creating service configuration file', service=self._name, file=self._config_file)
-        write_file(self._config_file, self._configuration)
+        create_file(self._config_file, self._configuration)
 
     def _on_service_state_changed(self, state: str) -> None:
         super()._on_service_state_changed(state)

@@ -3,10 +3,12 @@ from os.path import exists
 from unittest import TestCase
 from unittest.mock import MagicMock
 
+from common_utility import delete_directory, copy_file, create_file
 from context_logger import setup_logging
 from systemd_dbus import Systemd
+from test_utility import compare_files
 
-from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT, copy_file, delete_directory, compare_files, create_file
+from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_event import WifiEventType
 from wifi_service import WpaService, ServiceDependencies, IService, ServiceError
 from wifi_utility import IPlatform, IJournal
@@ -46,7 +48,7 @@ class WpaServiceTest(TestCase):
     def test_setup_raises_service_error_when_failed_to_update_service_file(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
-        wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=None)
+        wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file='')
 
         # When
         self.assertRaises(ServiceError, wpa_service.setup)
@@ -58,8 +60,14 @@ class WpaServiceTest(TestCase):
     def test_start_removes_run_file_and_starts_dhcp_client(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
-        wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE,
-                                 run_dir=self.WPA_RUN_DIR)
+        wpa_service = WpaService(
+            dependencies,
+            wpa_config,
+            wpa_dbus,
+            dhcp_client,
+            service_file=self.WPA_SERVICE_FILE,
+            run_dir=self.WPA_RUN_DIR,
+        )
         create_file(f'{self.WPA_RUN_DIR}/wlan0', '')
 
         # When
@@ -72,8 +80,14 @@ class WpaServiceTest(TestCase):
     def test_restart_removes_run_file_and_starts_dhcp_client(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
-        wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE,
-                                 run_dir=self.WPA_RUN_DIR)
+        wpa_service = WpaService(
+            dependencies,
+            wpa_config,
+            wpa_dbus,
+            dhcp_client,
+            service_file=self.WPA_SERVICE_FILE,
+            run_dir=self.WPA_RUN_DIR,
+        )
         create_file(f'{self.WPA_RUN_DIR}/wlan0', '')
 
         # When
@@ -92,13 +106,17 @@ class WpaServiceTest(TestCase):
         result = wpa_service.get_supported_events()
 
         # Then
-        self.assertEqual([
-            WifiEventType.CLIENT_DISABLED,
-            WifiEventType.CLIENT_INACTIVE,
-            WifiEventType.CLIENT_SCANNING,
-            WifiEventType.CLIENT_CONNECTING,
-            WifiEventType.CLIENT_CONNECTED,
-            WifiEventType.CLIENT_DISCONNECTED], result)
+        self.assertEqual(
+            [
+                WifiEventType.CLIENT_DISABLED,
+                WifiEventType.CLIENT_INACTIVE,
+                WifiEventType.CLIENT_SCANNING,
+                WifiEventType.CLIENT_CONNECTING,
+                WifiEventType.CLIENT_CONNECTED,
+                WifiEventType.CLIENT_DISCONNECTED,
+            ],
+            result,
+        )
 
     def test_returns_connected_ssid(self):
         # Given
@@ -117,7 +135,7 @@ class WpaServiceTest(TestCase):
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
         wpa_config.get_networks.return_value = {
             '"test-network1"': {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
-            'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'}
+            'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},
         }
         wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE)
 
@@ -132,7 +150,7 @@ class WpaServiceTest(TestCase):
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
         wpa_config.get_networks.return_value = {
             '"test-network1"': {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
-            'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'}
+            'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},
         }
         wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE)
 
@@ -140,9 +158,13 @@ class WpaServiceTest(TestCase):
         result = wpa_service.get_networks()
 
         # Then
-        self.assertEqual([
-            {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
-            {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'}], result)
+        self.assertEqual(
+            [
+                {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
+                {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},
+            ],
+            result,
+        )
 
     def test_adds_network(self):
         # Given
@@ -152,11 +174,13 @@ class WpaServiceTest(TestCase):
 
         # When
         wpa_service.add_network(
-            {'ssid': 'test-network1', 'password': 'test-password1', 'enabled': '1', 'priority': '1'})
+            {'ssid': 'test-network1', 'password': 'test-password1', 'enabled': '1', 'priority': '1'}
+        )
 
         # Then
         wpa_dbus.add_network.assert_called_once_with(
-            {'ssid': 'test-network1', 'psk': 'test-password1', 'disabled': 0, 'priority': '1'})
+            {'ssid': 'test-network1', 'psk': 'test-password1', 'disabled': 0, 'priority': '1'}
+        )
         wpa_config.add_network.assert_called_once_with(
             {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': 0, 'priority': '1'}
         )

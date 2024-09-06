@@ -1,9 +1,11 @@
 import unittest
 from unittest import TestCase
 
+from common_utility import delete_directory, copy_file
 from context_logger import setup_logging
+from test_utility import compare_files
 
-from tests import delete_directory, TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT, copy_file, compare_files
+from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_wpa.wpaConfig import WpaConfig
 
 
@@ -32,7 +34,8 @@ class WpaConfigTest(TestCase):
 
         # Then
         self.assertEqual(
-            {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'}, network)
+            {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'}, network
+        )
 
     def test_get_network_returns_none_when_no_match(self):
         # Given
@@ -53,10 +56,18 @@ class WpaConfigTest(TestCase):
 
         # Then
         self.assertEqual(2, len(networks))
-        self.assertEqual({
-            '"test-network1"': {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
-            'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'}
-        }, networks)
+        self.assertEqual(
+            {
+                '"test-network1"': {
+                    'ssid': '"test-network1"',
+                    'psk': '"test-password1"',
+                    'disabled': '0',
+                    'priority': '0',
+                },
+                'test-network2': {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},
+            },
+            networks,
+        )
 
     def test_get_networks_returns_empty_dictionary_when_config_file_is_missing(self):
         # Given
@@ -106,7 +117,7 @@ class WpaConfigTest(TestCase):
         wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
         networks = [
             {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
-            {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'}
+            {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},
         ]
 
         # When

@@ -4,10 +4,10 @@
 
 import fileinput
 
+from common_utility import create_file
 from context_logger import get_logger
 
 from wifi_service import Service, ServiceDependencies
-from wifi_utility import write_file
 
 log = get_logger('AvahiService')
 
@@ -15,9 +15,13 @@ log = get_logger('AvahiService')
 class AvahiService(Service):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice'
 
-    def __init__(self, dependencies: ServiceDependencies, hostname: str,
-                 hosts_config: str = '/etc/hosts',
-                 hostname_config: str = '/etc/hostname') -> None:
+    def __init__(
+        self,
+        dependencies: ServiceDependencies,
+        hostname: str,
+        hosts_config: str = '/etc/hosts',
+        hostname_config: str = '/etc/hostname',
+    ) -> None:
         super().__init__('avahi-daemon', self._SYSTEMD_DBUS_PATH, dependencies)
         self._hostname = hostname
         self._hosts_config = hosts_config
@@ -29,7 +33,7 @@ class AvahiService(Service):
     def _setup_config(self) -> None:
         current_hostname = self._platform.get_hostname()
 
-        write_file(self._hostname_config, self._hostname + '\n')
+        create_file(self._hostname_config, self._hostname + '\n')
 
         self._platform.execute_command(f'hostname -F {self._hostname_config}')
 

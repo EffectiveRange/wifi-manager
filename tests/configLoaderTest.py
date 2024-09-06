@@ -1,9 +1,10 @@
 import unittest
 from unittest import TestCase
 
+from common_utility import delete_directory
 from context_logger import setup_logging
 
-from tests import TEST_RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT, delete_directory
+from tests import TEST_RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT
 from wifi_utility import ConfigLoader
 
 

@@ -14,9 +14,20 @@ setup(
     data_files=[
         ('config', ['config/wifi-manager.conf', 'config/hostapd.conf.template', 'config/dnsmasq.conf.template']),
         ('templates', ['templates/configure.html', 'templates/identify.html']),
-        ('static', ['static/style.css'])],
-    install_requires=['flask', 'waitress', 'netifaces', 'dbus-python', 'PyGObject', 'ssdpy', 'jinja2', 'cysystemd',
-                      'parameterized',
-                      'python-context-logger@git+https://github.com/EffectiveRange/python-context-logger.git@latest',
-                      'python-systemd-dbus@git+https://github.com/EffectiveRange/python-systemd-dbus.git@latest']
+        ('static', ['static/style.css']),
+    ],
+    install_requires=[
+        'flask',
+        'waitress',
+        'netifaces',
+        'dbus-python',
+        'PyGObject',
+        'ssdpy',
+        'jinja2',
+        'cysystemd',
+        'parameterized',
+        'python-context-logger@git+https://github.com/EffectiveRange/python-context-logger.git@latest',
+        'python-common-utility@git+https://github.com/EffectiveRange/python-common-utility.git@latest',
+        'python-systemd-dbus@git+https://github.com/EffectiveRange/python-systemd-dbus.git@latest',
+    ],
 )

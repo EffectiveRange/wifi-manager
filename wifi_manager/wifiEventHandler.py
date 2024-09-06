@@ -4,11 +4,12 @@
 
 from typing import Any, Optional
 
+from common_utility import IReusableTimer
 from context_logger import get_logger
 
 from wifi_event import WifiEventType
 from wifi_manager import IWifiControl, WifiControlState
-from wifi_utility import IReusableTimer, ISsdpServer
+from wifi_utility import ISsdpServer
 
 log = get_logger('WifiEventHandler')
 
@@ -30,8 +31,14 @@ class IEventHandler(object):
 
 class WifiEventHandler(IEventHandler):
 
-    def __init__(self, wifi_control: IWifiControl, timer: IReusableTimer,
-                 client_timeout: int, peer_timeout: int, ssdp_server: Optional[ISsdpServer] = None) -> None:
+    def __init__(
+        self,
+        wifi_control: IWifiControl,
+        timer: IReusableTimer,
+        client_timeout: int,
+        peer_timeout: int,
+        ssdp_server: Optional[ISsdpServer] = None,
+    ) -> None:
         self._client_timeout = client_timeout
         self._peer_timeout = peer_timeout
         self._wifi_control = wifi_control
@@ -102,8 +109,12 @@ class WifiEventHandler(IEventHandler):
 
     def _on_client_not_connected(self, event_type: WifiEventType, data: Any) -> None:
         state = self._wifi_control.get_state()
-        log.info('Trying to connect to a network', wifi_mode=state,
-                 wifi_event=event_type, timeout_seconds=self._client_timeout)
+        log.info(
+            'Trying to connect to a network',
+            wifi_mode=state,
+            wifi_event=event_type,
+            timeout_seconds=self._client_timeout,
+        )
         self._timer.start(self._client_timeout, self._on_client_connect_timeout)
 
     def _on_client_connected(self, event_type: WifiEventType, data: Any) -> None:

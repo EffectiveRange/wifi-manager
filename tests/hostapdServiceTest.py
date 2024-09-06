@@ -2,10 +2,12 @@ import unittest
 from unittest import TestCase
 from unittest.mock import MagicMock
 
+from common_utility import delete_directory
 from context_logger import setup_logging
 from systemd_dbus import Systemd
+from test_utility import compare_files
 
-from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT, delete_directory, RESOURCE_ROOT, compare_files
+from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT, RESOURCE_ROOT
 from wifi_event import WifiEventType
 from wifi_service import HostapdService, HostapdConfig, ServiceDependencies, ServiceError, DhcpServerService
 from wifi_utility import IPlatform, IJournal
@@ -28,8 +30,9 @@ class HostapdServiceTest(TestCase):
         dependencies, config, dhcp_server = create_components()
         dependencies.systemd.is_enabled.return_value = True
         dependencies.systemd.is_masked.return_value = True
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.EXPECTED_HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.EXPECTED_HOSTAPD_CONFIG_FILE
+        )
 
         # When
         hostapd_service.setup()
@@ -43,8 +46,9 @@ class HostapdServiceTest(TestCase):
     def test_setup_updates_config_file_hostapd(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         hostapd_service.setup()
@@ -55,7 +59,7 @@ class HostapdServiceTest(TestCase):
     def test_setup_raises_service_error_when_failed_to_update_config_file(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=None)
+        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT, config_file='')
 
         # When
         self.assertRaises(ServiceError, hostapd_service.setup)
@@ -66,8 +70,9 @@ class HostapdServiceTest(TestCase):
     def test_starts_dhcp_server(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         hostapd_service.start()
@@ -78,8 +83,9 @@ class HostapdServiceTest(TestCase):
     def test_restarts_dhcp_server(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         hostapd_service.restart()
@@ -90,23 +96,24 @@ class HostapdServiceTest(TestCase):
     def test_returns_supported_events(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         result = hostapd_service.get_supported_events()
 
         # Then
-        self.assertEqual([
-            WifiEventType.HOTSPOT_STARTED,
-            WifiEventType.HOTSPOT_STOPPED,
-            WifiEventType.HOTSPOT_FAILED], result)
+        self.assertEqual(
+            [WifiEventType.HOTSPOT_STARTED, WifiEventType.HOTSPOT_STOPPED, WifiEventType.HOTSPOT_FAILED], result
+        )
 
     def test_returns_hotspot_ssid(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         result = hostapd_service.get_hotspot_ssid()
@@ -117,8 +124,9 @@ class HostapdServiceTest(TestCase):
     def test_returns_hotspot_ip(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         # When
         result = hostapd_service.get_hotspot_ip()
@@ -129,8 +137,9 @@ class HostapdServiceTest(TestCase):
     def test_executed_callback_on_service_state_change_event(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         callback_mock = MagicMock()
         hostapd_service.register_callback(WifiEventType.HOTSPOT_STARTED, callback_mock.handle_event)
@@ -144,8 +153,9 @@ class HostapdServiceTest(TestCase):
     def test_suppressed_exception_when_executed_callback_raises(self):
         # Given
         dependencies, config, dhcp_server = create_components()
-        hostapd_service = HostapdService(dependencies, config, dhcp_server, RESOURCE_ROOT,
-                                         config_file=self.HOSTAPD_CONFIG_FILE)
+        hostapd_service = HostapdService(
+            dependencies, config, dhcp_server, RESOURCE_ROOT, config_file=self.HOSTAPD_CONFIG_FILE
+        )
 
         callback_mock = MagicMock()
         callback_mock.handle_event.__name__ = 'test_handler'

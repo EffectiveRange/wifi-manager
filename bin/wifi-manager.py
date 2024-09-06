@@ -12,6 +12,7 @@ from threading import Thread
 from typing import Any
 
 from _dbus_glib_bindings import DBusGMainLoop
+from common_utility import ReusableTimer
 from context_logger import setup_logging, get_logger
 from cysystemd.reader import JournalReader  # type: ignore
 from dbus import SystemBus
@@ -20,9 +21,20 @@ from jinja2 import Template
 from systemd_dbus import SystemdDbus
 
 from wifi_manager import WifiControl, WifiEventHandler, WebServerConfig, WifiWebServer, WifiManager
-from wifi_service import WpaService, DhcpcdService, AvahiService, HostapdService, DnsmasqService, HostapdConfig, \
-    DnsmasqConfig, IService, ServiceDependencies, NetworkManagerService, SystemdResolvedService
-from wifi_utility import Platform, ConfigLoader, WlanInterfaceSelector, ReusableTimer, SsdpServer, ServiceJournal
+from wifi_service import (
+    WpaService,
+    DhcpcdService,
+    AvahiService,
+    HostapdService,
+    DnsmasqService,
+    HostapdConfig,
+    DnsmasqConfig,
+    IService,
+    ServiceDependencies,
+    NetworkManagerService,
+    SystemdResolvedService,
+)
+from wifi_utility import Platform, ConfigLoader, WlanInterfaceSelector, SsdpServer, ServiceJournal
 from wifi_wpa import WpaDbus, WpaConfig
 
 APPLICATION_NAME = 'wifi-manager'
@@ -66,11 +78,7 @@ def main() -> None:
     cpu_serial = platform.get_cpu_serial()
     mac_address = platform.get_mac_address(interface)
 
-    id_context = {
-        'device_role': device_role,
-        'cpu_serial': cpu_serial,
-        'mac_address': mac_address
-    }
+    id_context = {'device_role': device_role, 'cpu_serial': cpu_serial, 'mac_address': mac_address}
 
     hostname = Template(hostname_pattern).render(id_context)
     id_context['hostname'] = hostname
@@ -135,8 +143,9 @@ def main() -> None:
 def _get_arguments() -> dict[str, Any]:
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--config-file', help='configuration file', default='/etc/wifi-manager.conf')
-    parser.add_argument('--log-file', help='log file path',
-                        default='/var/log/effective-range/wifi-manager/wifi-manager.log')
+    parser.add_argument(
+        '--log-file', help='log file path', default='/var/log/effective-range/wifi-manager/wifi-manager.log'
+    )
     parser.add_argument('--log-level', help='logging level')
 
     parser.add_argument('--hotspot-ip', help='hotspot static IP address')
