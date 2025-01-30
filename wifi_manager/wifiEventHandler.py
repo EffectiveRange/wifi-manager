@@ -28,6 +28,9 @@ class IEventHandler(object):
     def on_identify_requested(self) -> bool:
         raise NotImplementedError()
 
+    def shutdown(self) -> None:
+        raise NotImplementedError()
+
 
 class WifiEventHandler(IEventHandler):
 
@@ -88,6 +91,9 @@ class WifiEventHandler(IEventHandler):
         log.info('Sending identification signal (Buzzer/LED)')
         # TODO: implement
         return True
+
+    def shutdown(self) -> None:
+        self._timer.cancel()
 
     def _on_client_connect_timeout(self) -> None:
         state = self._wifi_control.get_state()

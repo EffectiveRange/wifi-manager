@@ -48,6 +48,7 @@ class WifiManager(object):
         if self._ssdp_server:
             self._ssdp_server.shutdown()
         self._web_server.shutdown()
+        self._event_handler.shutdown()
 
     def _setup_services(self) -> None:
         for service in self._services:

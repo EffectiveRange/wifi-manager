@@ -300,6 +300,18 @@ class WifiEventHandlerTest(TestCase):
         # Then
         timer.restart.assert_called_once()
 
+    def test_timer_cancelled_when_shutdown_called(self):
+        # Given
+        wifi_control, timer, client_timeout, peer_timeout = create_mocks()
+
+        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, peer_timeout)
+
+        # When
+        event_handler.shutdown()
+
+        # Then
+        timer.cancel.assert_called_once()
+
 
 def create_mocks(wifi_state: WifiControlState = WifiControlState.CLIENT):
     client_timeout = 15
