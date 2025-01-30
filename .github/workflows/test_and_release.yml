@@ -2,8 +2,8 @@ name: Test and Release
 
 on:
   push:
-    branches: main
-    tags: v*.*.*
+    branches: [main]
+    tags: [v*.*.*]
 
   pull_request:
     branches: [ "main" ]
@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libdbus-glib-1-dev libgirepository1.0-dev libsystemd-dev
+          sudo apt-get install -y build-essential libdbus-glib-1-dev libgirepository1.0-dev libcairo2-dev libsystemd-dev
       - name: Verify changes
         uses: EffectiveRange/python-verify-github-action@v1
         with:

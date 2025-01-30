@@ -33,6 +33,7 @@ class WifiManagerTest(TestCase):
 
         ssdp_server.shutdown.assert_called_once()
         web_server.shutdown.assert_called_once()
+        event_handler.shutdown.assert_called_once()
 
     def test_setup_services(self):
         # Given
@@ -69,6 +70,7 @@ class WifiManagerTest(TestCase):
         # Then
         web_server.shutdown.assert_called_once()
         ssdp_server.shutdown.assert_called_once()
+        event_handler.shutdown.assert_called_once()
 
     def test_setup_event_handling(self):
         # Given
