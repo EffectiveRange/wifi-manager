@@ -5,6 +5,7 @@
 import os
 from typing import Any, Optional
 
+from common_utility import is_file_matches_pattern
 from context_logger import get_logger
 
 log = get_logger('WpaSupplicantConfig')
@@ -30,12 +31,19 @@ class IWpaConfig(object):
     def save_networks(self, networks: list[dict[str, Any]]) -> None:
         raise NotImplementedError()
 
+    def need_config_file_setup(self) -> bool:
+        raise NotImplementedError()
+
+    def setup_config_file(self) -> None:
+        raise NotImplementedError()
+
 
 class WpaConfig(IWpaConfig):
     NETWORK_START = 'network={'
     NETWORK_END = '}'
 
-    def __init__(self, config_file: str = '/etc/wpa_supplicant/wpa_supplicant.conf') -> None:
+    def __init__(self, country: str, config_file: str = '/etc/wpa_supplicant/wpa_supplicant.conf') -> None:
+        self._country = country
         self._config_file = config_file
 
     def get_config_file(self) -> str:
@@ -86,11 +94,26 @@ class WpaConfig(IWpaConfig):
     def save_networks(self, networks: list[dict[str, Any]]) -> None:
         os.makedirs(os.path.dirname(self._config_file), exist_ok=True)
         with open(self._config_file, 'w') as file:
+            for line in self._get_config_lines():
+                file.write(f'{line}\n')
+
             for network in networks:
                 file.write(f'\n{self.NETWORK_START}\n')
                 for key, value in network.items():
                     file.write(f'\t{key}={value}\n')
                 file.write(f'{self.NETWORK_END}\n')
+
+    def need_config_file_setup(self) -> bool:
+        pattern = '\n+'.join([f'({line})' for line in self._get_config_lines()])
+        return not is_file_matches_pattern(self._config_file, pattern)
+
+    def setup_config_file(self) -> None:
+        networks = self.get_networks()
+
+        self.save_networks(list(networks.values()))
+
+    def _get_config_lines(self) -> list[str]:
+        return ['ctrl_interface=/run/wpa_supplicant', 'update_config=1', 'ap_scan=1', f'country={self._country}']
 
     def _strip_line(self, line: str) -> str:
         return line.strip().replace(' ', '')

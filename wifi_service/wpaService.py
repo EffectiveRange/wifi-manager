@@ -40,13 +40,13 @@ class WpaService(WifiClientService):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/wpa_5fsupplicant_2eservice'
 
     def __init__(
-        self,
-        dependencies: ServiceDependencies,
-        wpa_config: IWpaConfig,
-        wpa_dbus: IWpaDbus,
-        dhcp_client: IService,
-        service_file: str = '/lib/systemd/system/wpa_supplicant.service',
-        run_dir: str = '/run/wpa_supplicant',
+            self,
+            dependencies: ServiceDependencies,
+            wpa_config: IWpaConfig,
+            wpa_dbus: IWpaDbus,
+            dhcp_client: IService,
+            service_file: str = '/lib/systemd/system/wpa_supplicant.service',
+            run_dir: str = '/run/wpa_supplicant',
     ) -> None:
         super().__init__('wpa_supplicant', self._SYSTEMD_DBUS_PATH, dependencies)
         self._wpa_config = wpa_config
@@ -89,21 +89,29 @@ class WpaService(WifiClientService):
         self._dhcp_client.start()
 
     def _need_config_setup(self) -> bool:
-        return not is_file_matches_pattern(self._service_file, self._exec_start)
+        return self._need_service_file_setup() or self._wpa_config.need_config_file_setup()
 
     def _setup_config(self) -> None:
-        log.info('Updating service file', file=self._service_file)
+        if self._need_service_file_setup():
+            log.info('Updating service file', file=self._service_file)
 
-        with fileinput.FileInput(self._service_file, inplace=True) as file:
-            for line in file:
-                if 'ExecStart' in line:
-                    line = self._exec_start
-                print(line, end='')
+            with fileinput.FileInput(self._service_file, inplace=True) as file:
+                for line in file:
+                    if 'ExecStart' in line:
+                        line = self._exec_start
+                    print(line, end='')
 
-        self._systemd.reload_daemon()
+            self._systemd.reload_daemon()
+
+        if self._wpa_config.need_config_file_setup():
+            log.info('Updating config file', file=self._wpa_config.get_config_file())
+            self._wpa_config.setup_config_file()
 
     def _setup_custom_event_handling(self) -> None:
         self._wpa_dbus.add_properties_changed_handler(self._on_wpa_properties_changed)
+
+    def _need_service_file_setup(self) -> bool:
+        return not is_file_matches_pattern(self._service_file, self._exec_start)
 
     def _on_wpa_properties_changed(self, properties: dict[str, Any]) -> None:
         state = properties.get('State')

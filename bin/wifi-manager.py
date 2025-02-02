@@ -66,6 +66,7 @@ def main() -> None:
         hotspot_ip = configuration['hotspot_ip']
         dhcp_range = configuration['dhcp_range']
         server_port = int(configuration['server_port'])
+        country = configuration.get('country', 'HU')
         ssdp_enabled = configuration.get('ssdp_enabled', 'false').lower() == 'true'
         ssdp_usn_pattern = configuration['ssdp_usn_pattern']
         ssdp_st_pattern = configuration['ssdp_st_pattern']
@@ -75,6 +76,9 @@ def main() -> None:
     platform = Platform()
 
     interface = WlanInterfaceSelector(platform).select(interface)
+
+    platform.disable_wlan_power_save(interface)
+
     cpu_serial = platform.get_cpu_serial()
     mac_address = platform.get_mac_address(interface)
 
@@ -86,10 +90,10 @@ def main() -> None:
     system_bus = SystemBus(DBusGMainLoop(set_as_default=True))
 
     with SystemdDbus(system_bus) as systemd:
-        wpa_config = WpaConfig()
+        wpa_config = WpaConfig(country)
         wpa_dbus = WpaDbus(interface, system_bus)
         dnsmasq_config = DnsmasqConfig(interface, hotspot_ip, dhcp_range, server_port)
-        hostapd_config = HostapdConfig(interface, mac_address, hostname, password)
+        hostapd_config = HostapdConfig(interface, mac_address, hostname, password, country)
         reader = JournalReader()
         journal = ServiceJournal(reader)
         service_dependencies = ServiceDependencies(platform, systemd, journal)
@@ -157,6 +161,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument('--device-role', help='device role')
     parser.add_argument('--preferred-interface', help='preferred wlan interface')
     parser.add_argument('--hostname-pattern', help='hostname pattern')
+    parser.add_argument('--country', help='country code')
 
     parser.add_argument('--ssdp-enabled', help='start optional SSDP server', action=BooleanOptionalAction)
     parser.add_argument('--ssdp-usn-pattern', help='SSDP USN pattern')

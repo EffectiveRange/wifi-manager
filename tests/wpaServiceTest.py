@@ -57,6 +57,19 @@ class WpaServiceTest(TestCase):
         dependencies.systemd.reload_daemon.assert_not_called()
         dependencies.systemd.restart_service.assert_not_called()
 
+    def test_setup_calls_wpa_config_setup_when_needed(self):
+        # Given
+        dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
+        wpa_config.need_config_file_setup.side_effect = [True, False]
+        wpa_service = WpaService(dependencies, wpa_config, wpa_dbus, dhcp_client, service_file=self.WPA_SERVICE_FILE)
+
+        # When
+        wpa_service._config_reloaded.set()
+        wpa_service.setup()
+
+        # Then
+        wpa_config.setup_config_file.assert_called_once()
+
     def test_start_removes_run_file_and_starts_dhcp_client(self):
         # Given
         dependencies, wpa_config, wpa_dbus, dhcp_client = create_components()
@@ -208,6 +221,7 @@ def create_components():
     dependencies = ServiceDependencies(platform, systemd, journal)
     wpa_config = MagicMock(spec=IWpaConfig)
     wpa_config.get_config_file.return_value = '/etc/wpa_supplicant/wpa_supplicant.conf'
+    wpa_config.need_config_file_setup.return_value = False
     wpa_dbus = MagicMock(spec=IWpaDbus)
     wpa_dbus.get_interface.return_value = 'wlan0'
     dhcp_client = MagicMock(spec=IService)

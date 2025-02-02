@@ -20,6 +20,9 @@ class IPlatform(object):
     def get_wlan_interfaces(self) -> list[str]:
         raise NotImplementedError()
 
+    def disable_wlan_power_save(self, interface: str) -> None:
+        raise NotImplementedError()
+
     def get_hostname(self) -> str:
         raise NotImplementedError()
 
@@ -49,6 +52,9 @@ class Platform(IPlatform):
 
     def get_wlan_interfaces(self) -> list[str]:
         return [interface for interface in netifaces.interfaces() if interface.startswith('wl')]
+
+    def disable_wlan_power_save(self, interface: str) -> None:
+        self.execute_command(f'iw dev {interface} set power_save off')
 
     def get_hostname(self) -> str:
         return socket.gethostname()
