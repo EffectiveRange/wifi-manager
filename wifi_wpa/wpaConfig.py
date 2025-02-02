@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: MIT
 
 import os
-from typing import Any, Optional, TextIO
+from typing import Any, Optional
 
+from common_utility import is_file_matches_pattern
 from context_logger import get_logger
 
 log = get_logger('WpaSupplicantConfig')
@@ -28,6 +29,12 @@ class IWpaConfig(object):
         raise NotImplementedError()
 
     def save_networks(self, networks: list[dict[str, Any]]) -> None:
+        raise NotImplementedError()
+
+    def need_config_file_setup(self) -> bool:
+        raise NotImplementedError()
+
+    def setup_config_file(self) -> None:
         raise NotImplementedError()
 
 
@@ -87,17 +94,26 @@ class WpaConfig(IWpaConfig):
     def save_networks(self, networks: list[dict[str, Any]]) -> None:
         os.makedirs(os.path.dirname(self._config_file), exist_ok=True)
         with open(self._config_file, 'w') as file:
-            self._add_config_header(file)
+            for line in self._get_config_lines():
+                file.write(f'{line}\n')
+
             for network in networks:
                 file.write(f'\n{self.NETWORK_START}\n')
                 for key, value in network.items():
                     file.write(f'\t{key}={value}\n')
                 file.write(f'{self.NETWORK_END}\n')
 
+    def need_config_file_setup(self) -> bool:
+        pattern = '\n+'.join([f'({line})' for line in self._get_config_lines()])
+        return not is_file_matches_pattern(self._config_file, pattern)
+
+    def setup_config_file(self) -> None:
+        networks = self.get_networks()
+
+        self.save_networks(list(networks.values()))
+
+    def _get_config_lines(self) -> list[str]:
+        return ['ctrl_interface=/run/wpa_supplicant', 'ap_scan=1', f'country={self._country}']
+
     def _strip_line(self, line: str) -> str:
         return line.strip().replace(' ', '')
-
-    def _add_config_header(self, file: TextIO) -> None:
-        file.write('ctrl_interface=/run/wpa_supplicant\n')
-        file.write('ap_scan=1\n')
-        file.write(f'country={self._country}\n')

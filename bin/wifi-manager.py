@@ -66,7 +66,7 @@ def main() -> None:
         hotspot_ip = configuration['hotspot_ip']
         dhcp_range = configuration['dhcp_range']
         server_port = int(configuration['server_port'])
-        country = configuration['country']
+        country = configuration.get('country', 'HU')
         ssdp_enabled = configuration.get('ssdp_enabled', 'false').lower() == 'true'
         ssdp_usn_pattern = configuration['ssdp_usn_pattern']
         ssdp_st_pattern = configuration['ssdp_st_pattern']

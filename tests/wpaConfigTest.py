@@ -126,6 +126,39 @@ class WpaConfigTest(TestCase):
         # Then
         self.assertTrue(compare_files(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE))
 
+    def test_returns_true_when_config_file_needs_setup(self):
+        # Given
+        copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('US', self.WPA_CONFIG_FILE)
+
+        # When
+        needs_setup = wpa_config.need_config_file_setup()
+
+        # Then
+        self.assertTrue(needs_setup)
+
+    def test_returns_false_when_config_file_is_set_up(self):
+        # Given
+        copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.WPA_CONFIG_FILE)
+
+        # When
+        needs_setup = wpa_config.need_config_file_setup()
+
+        # Then
+        self.assertFalse(needs_setup)
+
+    def test_should_setup_config_file(self):
+        # Given
+        copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('US', self.WPA_CONFIG_FILE)
+
+        # When
+        wpa_config.setup_config_file()
+
+        # Then
+        self.assertTrue(compare_files(self.get_expected_config_file('setup'), self.WPA_CONFIG_FILE))
+
 
 if __name__ == "__main__":
     unittest.main()
