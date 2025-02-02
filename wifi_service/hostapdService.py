@@ -32,11 +32,12 @@ class HostapdStateEvent(Enum):
 
 class HostapdConfig(object):
 
-    def __init__(self, interface: str, mac_address: str, ssid: str, password: str) -> None:
+    def __init__(self, interface: str, mac_address: str, ssid: str, password: str, country: str) -> None:
         self.interface = interface
         self.mac_address = mac_address
         self.ssid = ssid
         self.password = password
+        self.country = country
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -44,6 +45,7 @@ class HostapdConfig(object):
             'mac_address': self.mac_address,
             'ssid': self.ssid,
             'password': self.password,
+            'country': self.country,
         }
 
 

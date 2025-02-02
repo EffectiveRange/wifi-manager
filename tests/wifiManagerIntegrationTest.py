@@ -276,6 +276,7 @@ def setup_components(platform: IPlatform, systemd: Systemd, timer: IReusableTime
     mac_address = '00:11:22:33:44:55'
     hostname = 'test-hostname'
     password = 'test-password'
+    country = 'US'
     file_system_root = TEST_FILE_SYSTEM_ROOT
     hosts_config_file = f'{file_system_root}/etc/hosts'
     hostname_config_file = f'{file_system_root}/etc/hostname'
@@ -299,9 +300,9 @@ def setup_components(platform: IPlatform, systemd: Systemd, timer: IReusableTime
     wpa_dbus.get_interface.return_value = interface
     wpa_dbus.get_current_network_ssid.return_value = 'test-network'
 
-    wpa_config = WpaConfig(config_file=wpa_config_file)
+    wpa_config = WpaConfig(country, config_file=wpa_config_file)
     dnsmasq_config = DnsmasqConfig(interface, hotspot_ip, dhcp_range, server_port)
-    hostapd_config = HostapdConfig(interface, mac_address, hostname, password)
+    hostapd_config = HostapdConfig(interface, mac_address, hostname, password, country)
     service_dependencies = ServiceDependencies(platform, systemd, ServiceJournal(reader))
 
     dns_client_service = AvahiService(

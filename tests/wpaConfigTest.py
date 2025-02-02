@@ -15,7 +15,7 @@ class WpaConfigTest(TestCase):
 
     @staticmethod
     def get_expected_config_file(case) -> str:
-        return f'{TEST_RESOURCE_ROOT}/expected/wpa_supplicant.conf.{case}'
+        return f'{TEST_RESOURCE_ROOT}/expected/wpa_supplicant.{case}.conf'
 
     @classmethod
     def setUpClass(cls):
@@ -27,7 +27,7 @@ class WpaConfigTest(TestCase):
 
     def test_get_network_returns_network_by_ssid(self):
         # Given
-        wpa_config = WpaConfig(self.SOURCE_WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.SOURCE_WPA_CONFIG_FILE)
 
         # When
         network = wpa_config.get_network('"test-network1"')
@@ -39,7 +39,7 @@ class WpaConfigTest(TestCase):
 
     def test_get_network_returns_none_when_no_match(self):
         # Given
-        wpa_config = WpaConfig(self.SOURCE_WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.SOURCE_WPA_CONFIG_FILE)
 
         # When
         network = wpa_config.get_network('"missing-network"')
@@ -49,7 +49,7 @@ class WpaConfigTest(TestCase):
 
     def test_get_networks_returns_network_dictionary(self):
         # Given
-        wpa_config = WpaConfig(self.SOURCE_WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.SOURCE_WPA_CONFIG_FILE)
 
         # When
         networks = wpa_config.get_networks()
@@ -71,7 +71,7 @@ class WpaConfigTest(TestCase):
 
     def test_get_networks_returns_empty_dictionary_when_config_file_is_missing(self):
         # Given
-        wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.WPA_CONFIG_FILE)
 
         # When
         networks = wpa_config.get_networks()
@@ -82,7 +82,7 @@ class WpaConfigTest(TestCase):
     def test_add_network_adds_new_network(self):
         # Given
         copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
-        wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.WPA_CONFIG_FILE)
 
         # When
         wpa_config.add_network({'ssid': '"test-network3"', 'psk': '"test-password3"', 'disabled': '0', 'priority': '2'})
@@ -93,7 +93,7 @@ class WpaConfigTest(TestCase):
     def test_add_network_updates_network_when_ssid_already_present(self):
         # Given
         copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
-        wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('GB', self.WPA_CONFIG_FILE)
 
         # When
         wpa_config.add_network({'ssid': 'test-network2', 'psk': 'new-password2', 'disabled': '0', 'priority': '1'})
@@ -104,7 +104,7 @@ class WpaConfigTest(TestCase):
     def test_remove_network_removes_network_by_ssid(self):
         # Given
         copy_file(self.SOURCE_WPA_CONFIG_FILE, self.WPA_CONFIG_FILE)
-        wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('US', self.WPA_CONFIG_FILE)
 
         # When
         wpa_config.remove_network('test-network2')
@@ -114,7 +114,7 @@ class WpaConfigTest(TestCase):
 
     def test_save_networks_writes_config_file(self):
         # Given
-        wpa_config = WpaConfig(self.WPA_CONFIG_FILE)
+        wpa_config = WpaConfig('HU', self.WPA_CONFIG_FILE)
         networks = [
             {'ssid': '"test-network1"', 'psk': '"test-password1"', 'disabled': '0', 'priority': '0'},
             {'ssid': 'test-network2', 'psk': 'test-password2', 'disabled': '1', 'priority': '1'},

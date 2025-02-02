@@ -174,7 +174,7 @@ def create_components():
     systemd = MagicMock(spec=Systemd)
     journal = MagicMock(spec=IJournal)
     dependencies = ServiceDependencies(platform, systemd, journal)
-    config = HostapdConfig('wlan0', '11:22:33:44:55:66', 'test-hostname', 'test-password')
+    config = HostapdConfig('wlan0', '11:22:33:44:55:66', 'test-hostname', 'test-password', 'GB')
     dhcp_server = MagicMock(spec=DhcpServerService)
     dhcp_server.get_static_ip.return_value = '192.168.100.1'
     return dependencies, config, dhcp_server

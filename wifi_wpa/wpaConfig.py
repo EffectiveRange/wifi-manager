@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
-from typing import Any, Optional
+from typing import Any, Optional, TextIO
 
 from context_logger import get_logger
 
@@ -35,7 +35,8 @@ class WpaConfig(IWpaConfig):
     NETWORK_START = 'network={'
     NETWORK_END = '}'
 
-    def __init__(self, config_file: str = '/etc/wpa_supplicant/wpa_supplicant.conf') -> None:
+    def __init__(self, country: str, config_file: str = '/etc/wpa_supplicant/wpa_supplicant.conf') -> None:
+        self._country = country
         self._config_file = config_file
 
     def get_config_file(self) -> str:
@@ -86,6 +87,7 @@ class WpaConfig(IWpaConfig):
     def save_networks(self, networks: list[dict[str, Any]]) -> None:
         os.makedirs(os.path.dirname(self._config_file), exist_ok=True)
         with open(self._config_file, 'w') as file:
+            self._add_config_header(file)
             for network in networks:
                 file.write(f'\n{self.NETWORK_START}\n')
                 for key, value in network.items():
@@ -94,3 +96,8 @@ class WpaConfig(IWpaConfig):
 
     def _strip_line(self, line: str) -> str:
         return line.strip().replace(' ', '')
+
+    def _add_config_header(self, file: TextIO) -> None:
+        file.write('ctrl_interface=/run/wpa_supplicant\n')
+        file.write('ap_scan=1\n')
+        file.write(f'country={self._country}\n')
