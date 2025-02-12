@@ -9,10 +9,10 @@ import subprocess
 import netifaces
 from context_logger import get_logger
 
-log = get_logger('Platform')
+log = get_logger('PlatformAccess')
 
 
-class IPlatform(object):
+class IPlatformAccess(object):
 
     def enable_wlan_interfaces(self) -> None:
         raise NotImplementedError()
@@ -44,8 +44,11 @@ class IPlatform(object):
     def execute_command(self, command: str) -> bytes:
         raise NotImplementedError()
 
+    def reboot(self) -> None:
+        raise NotImplementedError()
 
-class Platform(IPlatform):
+
+class PlatformAccess(IPlatformAccess):
 
     def enable_wlan_interfaces(self) -> None:
         self.execute_command('rfkill unblock wlan')
@@ -88,6 +91,9 @@ class Platform(IPlatform):
         except subprocess.CalledProcessError as error:
             log.error('Error executing command', command=command, error=error.stderr)
             raise error
+
+    def reboot(self) -> None:
+        self.execute_command('reboot')
 
     def _get_address(self, interface: str, address_family: int) -> str:
         address = netifaces.ifaddresses(interface).get(address_family)

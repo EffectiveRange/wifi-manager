@@ -113,7 +113,12 @@ class WpaConfig(IWpaConfig):
         self.save_networks(list(networks.values()))
 
     def _get_config_lines(self) -> list[str]:
-        return ['ctrl_interface=/run/wpa_supplicant', 'update_config=1', 'ap_scan=1', f'country={self._country}']
+        return [
+            'ctrl_interface=/run/wpa_supplicant',
+            'update_config=1',
+            'ap_scan=1',
+            'bgscan=""',
+            f'country={self._country}']
 
     def _strip_line(self, line: str) -> str:
         return line.strip().replace(' ', '')

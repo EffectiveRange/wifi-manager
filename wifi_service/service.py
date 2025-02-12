@@ -9,7 +9,7 @@ from context_logger import get_logger
 from systemd_dbus import Systemd
 
 from wifi_event import WifiEventType
-from wifi_utility import IPlatform, IJournal
+from wifi_utility import IPlatformAccess, IJournal
 
 log = get_logger('Service')
 
@@ -59,7 +59,7 @@ class IService(object):
 
 class ServiceDependencies(object):
 
-    def __init__(self, platform: IPlatform, systemd: Systemd, journal: IJournal):
+    def __init__(self, platform: IPlatformAccess, systemd: Systemd, journal: IJournal):
         self.platform = platform
         self.systemd = systemd
         self.journal = journal

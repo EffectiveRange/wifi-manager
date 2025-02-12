@@ -4,7 +4,7 @@
 
 from context_logger import get_logger
 
-from wifi_utility import IPlatform
+from wifi_utility import IPlatformAccess
 
 log = get_logger('InterfaceSelector')
 
@@ -17,7 +17,7 @@ class InterfaceSelector(object):
 
 class WlanInterfaceSelector(InterfaceSelector):
 
-    def __init__(self, platform: IPlatform):
+    def __init__(self, platform: IPlatformAccess):
         self._platform = platform
 
     def select(self, interface: str) -> str:

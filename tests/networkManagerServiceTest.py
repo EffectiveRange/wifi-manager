@@ -6,7 +6,7 @@ from context_logger import setup_logging
 from systemd_dbus import Systemd
 
 from wifi_service import ServiceDependencies, NetworkManagerService
-from wifi_utility import IPlatform, IJournal
+from wifi_utility import IPlatformAccess, IJournal
 
 
 class NetworkManagerServiceTest(TestCase):
@@ -81,7 +81,7 @@ class NetworkManagerServiceTest(TestCase):
 
 
 def create_dependencies():
-    platform = MagicMock(spec=IPlatform)
+    platform = MagicMock(spec=IPlatformAccess)
     systemd = MagicMock(spec=Systemd)
     journal = MagicMock(spec=IJournal)
     dependencies = ServiceDependencies(platform, systemd, journal)
