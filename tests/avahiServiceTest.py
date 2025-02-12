@@ -9,7 +9,7 @@ from test_utility import compare_files
 
 from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_service import AvahiService, ServiceDependencies, ServiceError
-from wifi_utility import IPlatform, IJournal
+from wifi_utility import IPlatformAccess, IJournal
 
 
 class AvahiServiceTest(TestCase):
@@ -68,7 +68,7 @@ class AvahiServiceTest(TestCase):
 
 
 def create_dependencies():
-    platform = MagicMock(spec=IPlatform)
+    platform = MagicMock(spec=IPlatformAccess)
     systemd = MagicMock(spec=Systemd)
     journal = MagicMock(spec=IJournal)
     return ServiceDependencies(platform, systemd, journal)

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from context_logger import setup_logging
 
-from wifi_utility import IPlatform, WlanInterfaceSelector
+from wifi_utility import IPlatformAccess, WlanInterfaceSelector
 
 
 class InterfaceSelectorTest(TestCase):
@@ -18,7 +18,7 @@ class InterfaceSelectorTest(TestCase):
 
     def test_specified_interface_selected(self):
         # Given
-        platform = MagicMock(spec=IPlatform)
+        platform = MagicMock(spec=IPlatformAccess)
         platform.get_wlan_interfaces.return_value = ['wlan0']
         interface_selector = WlanInterfaceSelector(platform)
 
@@ -31,7 +31,7 @@ class InterfaceSelectorTest(TestCase):
 
     def test_specified_interface_selected_when_multiple_available(self):
         # Given
-        platform = MagicMock(spec=IPlatform)
+        platform = MagicMock(spec=IPlatformAccess)
         platform.get_wlan_interfaces.return_value = ['wlan0', 'wlan1']
         interface_selector = WlanInterfaceSelector(platform)
 
@@ -43,7 +43,7 @@ class InterfaceSelectorTest(TestCase):
 
     def test_first_interface_selected_when_specified_is_not_available(self):
         # Given
-        platform = MagicMock(spec=IPlatform)
+        platform = MagicMock(spec=IPlatformAccess)
         platform.get_wlan_interfaces.return_value = ['wlan1']
         interface_selector = WlanInterfaceSelector(platform)
 
@@ -55,7 +55,7 @@ class InterfaceSelectorTest(TestCase):
 
     def test_error_raised_when_no_interface_available(self):
         # Given
-        platform = MagicMock(spec=IPlatform)
+        platform = MagicMock(spec=IPlatformAccess)
         platform.get_wlan_interfaces.return_value = []
         interface_selector = WlanInterfaceSelector(platform)
 

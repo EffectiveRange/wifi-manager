@@ -11,7 +11,7 @@ from waitress.server import create_server
 from werkzeug import Response
 
 from wifi_manager import IEventHandler
-from wifi_utility import IPlatform
+from wifi_utility import IPlatformAccess
 
 log = get_logger('WifiWebServer')
 
@@ -38,7 +38,7 @@ class WebServerConfig(object):
 
 class WifiWebServer(IWebServer):
 
-    def __init__(self, configuration: WebServerConfig, platform: IPlatform, event_handler: IEventHandler) -> None:
+    def __init__(self, configuration: WebServerConfig, platform: IPlatformAccess, event_handler: IEventHandler) -> None:
         self._configuration = configuration
         self._platform = platform
         self._event_handler = event_handler

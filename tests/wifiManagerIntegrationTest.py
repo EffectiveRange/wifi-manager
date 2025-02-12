@@ -25,7 +25,7 @@ from wifi_service import (
     HostapdService,
     IService,
 )
-from wifi_utility import IPlatform, SsdpServer, ServiceJournal
+from wifi_utility import IPlatformAccess, SsdpServer, ServiceJournal
 from wifi_wpa import WpaConfig, WpaDbus
 
 
@@ -257,7 +257,7 @@ def trigger_event(target: Any, args: Optional[list[Any]] = None) -> None:
 
 
 def setup_mocks(ip_address='1.2.3.4', mac_address='00:11:22:33:44:55'):
-    platform = MagicMock(spec=IPlatform)
+    platform = MagicMock(spec=IPlatformAccess)
     platform.get_ip_address.return_value = ip_address
     platform.get_mac_address.return_value = mac_address
     platform.get_hostname.return_value = 'test-hostname'
@@ -268,7 +268,7 @@ def setup_mocks(ip_address='1.2.3.4', mac_address='00:11:22:33:44:55'):
     return platform, systemd, timer
 
 
-def setup_components(platform: IPlatform, systemd: Systemd, timer: IReusableTimer):
+def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusableTimer):
     interface = 'wlan0'
     hotspot_ip = '192.168.100.1'
     dhcp_range = '192.168.100.2,192.168.100.254,255.255.255.0,2m'

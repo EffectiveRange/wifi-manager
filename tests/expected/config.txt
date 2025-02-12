@@ -1,0 +1,7 @@
+# For more options and information see
+# http://rpf.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+[all]
+enable_uart=1
+dtoverlay=disable-bt

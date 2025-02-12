@@ -7,7 +7,7 @@ from systemd_dbus import Systemd
 
 from wifi_event import WifiEventType
 from wifi_service import ServiceDependencies, ServiceError, Service
-from wifi_utility import IPlatform, IJournal
+from wifi_utility import IPlatformAccess, IJournal
 
 
 class HostapdServiceTest(TestCase):
@@ -53,7 +53,7 @@ class HostapdServiceTest(TestCase):
 
 
 def create_dependencies():
-    platform = MagicMock(spec=IPlatform)
+    platform = MagicMock(spec=IPlatformAccess)
     systemd = MagicMock(spec=Systemd)
     journal = MagicMock(spec=IJournal)
     dependencies = ServiceDependencies(platform, systemd, journal)

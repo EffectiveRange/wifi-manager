@@ -34,7 +34,7 @@ from wifi_service import (
     NetworkManagerService,
     SystemdResolvedService,
 )
-from wifi_utility import Platform, ConfigLoader, WlanInterfaceSelector, SsdpServer, ServiceJournal
+from wifi_utility import PlatformAccess, ConfigLoader, WlanInterfaceSelector, SsdpServer, ServiceJournal, PlatformConfig
 from wifi_wpa import WpaDbus, WpaConfig
 
 APPLICATION_NAME = 'wifi-manager'
@@ -73,11 +73,16 @@ def main() -> None:
     except KeyError as error:
         raise ValueError(f'Missing configuration key: {error}')
 
-    platform = Platform()
+    platform = PlatformAccess()
+    platform_config = PlatformConfig()
 
     interface = WlanInterfaceSelector(platform).select(interface)
 
     platform.disable_wlan_power_save(interface)
+
+    if platform_config.setup():
+        log.warning('Platform configuration changed, rebooting')
+        platform.reboot()
 
     cpu_serial = platform.get_cpu_serial()
     mac_address = platform.get_mac_address(interface)

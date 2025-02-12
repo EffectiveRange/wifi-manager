@@ -11,7 +11,7 @@ from test_utility import compare_files
 from tests import TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_event import WifiEventType
 from wifi_service import WpaService, ServiceDependencies, IService, ServiceError
-from wifi_utility import IPlatform, IJournal
+from wifi_utility import IPlatformAccess, IJournal
 from wifi_wpa import IWpaDbus, IWpaConfig
 
 
@@ -214,7 +214,7 @@ class WpaServiceTest(TestCase):
 
 
 def create_components():
-    platform = MagicMock(spec=IPlatform)
+    platform = MagicMock(spec=IPlatformAccess)
     systemd = MagicMock(spec=Systemd)
     systemd.is_masked.return_value = False
     journal = MagicMock(spec=IJournal)
