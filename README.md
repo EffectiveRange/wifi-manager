@@ -20,14 +20,15 @@
 | wifi\_service/service.py                |      170 |        2 |       36 |        4 |     97% |121, 154->157, 166, 189->exit, 204->exit |
 | wifi\_service/systemdResolvedService.py |       11 |        0 |        0 |        0 |    100% |           |
 | wifi\_service/wpaService.py             |       86 |        1 |       20 |        6 |     93% |36, 95->106, 118->exit, 120->exit, 133->135, 135->137 |
-| wifi\_utility/\_\_init\_\_.py           |        5 |        0 |        0 |        0 |    100% |           |
+| wifi\_utility/\_\_init\_\_.py           |        6 |        0 |        0 |        0 |    100% |           |
 | wifi\_utility/configLoader.py           |       25 |        0 |        2 |        0 |    100% |           |
 | wifi\_utility/interfaceSelector.py      |       19 |        0 |        4 |        0 |    100% |           |
+| wifi\_utility/platformConfig.py         |       41 |        0 |        6 |        0 |    100% |           |
 | wifi\_utility/serviceJournal.py         |       46 |        0 |        6 |        1 |     98% |    62->67 |
 | wifi\_utility/ssdpServer.py             |       59 |        7 |       12 |        1 |     86% |34-39, 87->exit, 89-90 |
 | wifi\_wpa/\_\_init\_\_.py               |        2 |        0 |        0 |        0 |    100% |           |
 | wifi\_wpa/wpaConfig.py                  |       72 |        0 |       18 |        1 |     99% |    71->66 |
-|                               **TOTAL** | **1106** |   **19** |  **184** |   **22** | **97%** |           |
+|                               **TOTAL** | **1148** |   **19** |  **190** |   **22** | **97%** |           |
 
 
 ## Setup coverage badge
