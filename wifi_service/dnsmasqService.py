@@ -62,16 +62,11 @@ class DnsmasqService(DhcpServerService):
         self._config = config
         self._config_file_content = render_template_file(resource_root, template_file, config.to_dict())
 
-    def get_supported_events(self) -> list[WifiEventType]:
-        return [event.value for event in DnsmasqPeerEvent]
+    def get_supported_events(self) -> set[WifiEventType]:
+        return {event.value for event in DnsmasqPeerEvent}
 
     def get_static_ip(self) -> str:
         return self._config.static_ip
-
-    def _prepare_start(self) -> None:
-        self._platform.execute_command(
-            f'ifconfig {self._config.interface} {self._config.static_ip} netmask 255.255.255.0'
-        )
 
     def _need_config_setup(self) -> bool:
         expected_config = self._config_file_content.splitlines()

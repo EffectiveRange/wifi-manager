@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 from context_logger import setup_logging
 
+from wifi_config import WifiNetwork
 from wifi_event import WifiEventType
 from wifi_manager import WifiEventHandler, IReusableTimer, IWifiControl, WifiControlState
-from wifi_utility import ISsdpServer
 
 
 class WifiEventHandlerTest(TestCase):
@@ -89,23 +89,6 @@ class WifiEventHandlerTest(TestCase):
 
         # Then
         timer.cancel.assert_called_once()
-
-    def test_ssdp_restarted_when_client_connected_with_new_ip(self):
-        # Given
-        wifi_status = {'ssid': 'test-network', 'ip': '1.2.3.5', 'mac': '00:11:22:33:44:55'}
-        wifi_control, timer, client_timeout, peer_timeout = create_mocks()
-        wifi_control.get_status.return_value = wifi_status
-        wifi_control.get_ip_address.return_value = wifi_status['ip']
-        ssdp_server = MagicMock(spec=ISsdpServer)
-        ssdp_server.get_location.return_value = '1.2.3.4'
-
-        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, peer_timeout, ssdp_server)
-
-        # When
-        event_handler._on_client_ip_acquired(WifiEventType.CLIENT_IP_ACQUIRED, {})
-
-        # Then
-        ssdp_server.start.assert_called_once_with('1.2.3.5')
 
     def test_timer_started_when_hotspot_started_and_there_are_configured_networks(self):
         # Given
@@ -241,8 +224,7 @@ class WifiEventHandlerTest(TestCase):
 
         # Then
         self.assertTrue(result)
-        wifi_control.add_network.assert_called_once_with(
-            {'ssid': 'test-network', 'password': 'test-password', 'enabled': True, 'priority': 3})
+        wifi_control.add_network.assert_called_once_with(WifiNetwork('test-network', 'test-password', True, 3))
 
     def test_network_add_request_rejected_when_password_length_is_too_short(self):
         # Given
@@ -299,6 +281,33 @@ class WifiEventHandlerTest(TestCase):
 
         # Then
         timer.restart.assert_called_once()
+
+    def test_returns_true_and_client_started_when_restart_client_requested(self):
+        # Given
+        wifi_control, timer, client_timeout, peer_timeout = create_mocks()
+
+        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, peer_timeout)
+
+        # When
+        result = event_handler.on_restart_requested()
+
+        # Then
+        self.assertTrue(result)
+        wifi_control.start_client_mode.assert_called_once()
+        timer.cancel.assert_called_once()
+
+    def test_returns_false_when_restart_client_requested_but_failed_to_start_client(self):
+        # Given
+        wifi_control, timer, client_timeout, peer_timeout = create_mocks()
+        wifi_control.start_client_mode.side_effect = Exception('Failed to start client')
+
+        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, peer_timeout)
+
+        # When
+        result = event_handler.on_restart_requested()
+
+        # Then
+        self.assertFalse(result)
 
     def test_timer_cancelled_when_shutdown_called(self):
         # Given

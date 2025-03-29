@@ -7,37 +7,13 @@ from typing import Any, Optional
 import dbus
 from dbus import SystemBus, Interface, DBusException
 
-
-class ServiceError(Exception):
-    pass
-
-
-class InterfaceError(Exception):
-    pass
+from wifi_config import WifiNetwork
+from wifi_dbus import IWifiDbus, ServiceError, PropertyError, InterfaceError
 
 
-class PropertyError(Exception):
-    pass
+class WpaSupplicantDbus(IWifiDbus):
 
-
-class IWpaDbus(object):
-
-    def get_interface(self) -> str:
-        raise NotImplementedError()
-
-    def add_properties_changed_handler(self, on_properties_changed: Any) -> None:
-        raise NotImplementedError()
-
-    def get_current_network_ssid(self) -> Optional[str]:
-        raise NotImplementedError()
-
-    def add_network(self, network: dict[str, str]) -> Any:
-        raise NotImplementedError()
-
-
-class WpaDbus(IWpaDbus):
-
-    def __init__(self, interface: str, system_bus: SystemBus = SystemBus()) -> None:
+    def __init__(self, interface: str, system_bus: SystemBus) -> None:
         self._interface = interface
         self._system_bus = system_bus
         self._dbus_interface = WpaSupplicantInterface(interface, system_bus)
@@ -46,13 +22,13 @@ class WpaDbus(IWpaDbus):
     def get_interface(self) -> str:
         return self._interface
 
-    def add_properties_changed_handler(self, on_properties_changed: Any) -> None:
-        self._system_bus.add_signal_receiver(on_properties_changed,
+    def add_connection_handler(self, on_connection_changed: Any) -> None:
+        self._system_bus.add_signal_receiver(on_connection_changed,
                                              dbus_interface=self._dbus_interface.INTERFACE_NAME,
                                              signal_name='PropertiesChanged',
                                              path=self._dbus_interface.get_interface_path())
 
-    def get_current_network_ssid(self) -> Optional[str]:
+    def get_active_ssid(self) -> Optional[str]:
         self._dbus_interface.initialize()
         current_network_path = self._dbus_interface.get_current_network()
         if current_network_path != '/':
@@ -60,12 +36,19 @@ class WpaDbus(IWpaDbus):
         else:
             return None
 
-    def add_network(self, network: dict[str, str]) -> None:
+    def add_network(self, network: WifiNetwork) -> None:
         self._dbus_interface.initialize()
-        self._dbus_interface.add_network(network)
+
+        network_properties = {
+            'ssid': network.ssid,
+            'psk': network.password,
+            'disabled': str(int(not network.enabled)),
+            'priority': str(network.priority)
+        }
+        self._dbus_interface.add_network(network_properties)
 
 
-class WpaSupplicantDbus(object):
+class WpaSupplicant(object):
     _BASE_NAME = 'fi.w1.wpa_supplicant1'
     _BASE_PATH = '/fi/w1/wpa_supplicant1'
 
@@ -143,24 +126,6 @@ class WpaSupplicantDbus(object):
             except DBusException as error:
                 raise InterfaceError(error)
 
-    def get_debug_level(self) -> Any:
-        return self.__get_property(dbus.String("DebugLevel"))
-
-    def set_debug_level(self, parameter: str) -> None:
-        self.__set_property(dbus.String("DebugLevel"), dbus.String(parameter))
-
-    def get_debug_timestamp(self) -> Any:
-        return self.__get_property(dbus.String("DebugTimestamp"))
-
-    def set_debug_timestamp(self, parameter: int) -> None:
-        self.__set_property(dbus.String("DebugTimestamp"), dbus.Boolean(parameter))
-
-    def get_debug_show_keys(self) -> Any:
-        return self.__get_property(dbus.String("DebugShowKeys"))
-
-    def set_debug_show_keys(self, parameter: str) -> None:
-        self.__set_property(dbus.String("DebugShowKeys"), dbus.Boolean(parameter))
-
     def get_interfaces(self) -> Any:
         return self.__get_property(dbus.String("Interfaces"))
 
@@ -180,7 +145,7 @@ class WpaSupplicantDbus(object):
         return self.__get_properties()
 
 
-class WpaSupplicantInterface(WpaSupplicantDbus):
+class WpaSupplicantInterface(WpaSupplicant):
     INTERFACE_NAME = "fi.w1.wpa_supplicant1.Interface"
     _DEFAULT_INTERFACE_PATH = "/fi/w1/wpa_supplicant1/Interfaces/0"
 
@@ -332,7 +297,7 @@ class WpaSupplicantInterface(WpaSupplicantDbus):
         return self.__get_property("DisconnectReason")
 
 
-class WpaSupplicantNetwork(WpaSupplicantDbus):
+class WpaSupplicantNetwork(WpaSupplicant):
     _NETWORK_NAME = "fi.w1.wpa_supplicant1.Network"
 
     def __init__(self, system_bus: SystemBus) -> None:

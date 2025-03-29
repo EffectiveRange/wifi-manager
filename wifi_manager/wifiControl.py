@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 from context_logger import get_logger
 
+from wifi_config import WifiNetwork
 from wifi_event import WifiEventType
 from wifi_service import WifiClientService, WifiHotspotService, IService
 
@@ -52,7 +53,7 @@ class IWifiControl(object):
     def get_network_count(self) -> int:
         raise NotImplementedError()
 
-    def add_network(self, network: dict[str, Any]) -> None:
+    def add_network(self, network: WifiNetwork) -> None:
         raise NotImplementedError()
 
     def is_hotspot_ip_set(self) -> bool:
@@ -149,7 +150,7 @@ class WifiControl(IWifiControl):
     def get_network_count(self) -> int:
         return self._client_service.get_network_count()
 
-    def add_network(self, network: dict[str, Any]) -> None:
+    def add_network(self, network: WifiNetwork) -> None:
         self._client_service.add_network(network)
 
     def is_hotspot_ip_set(self) -> bool:

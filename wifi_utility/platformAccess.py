@@ -14,6 +14,9 @@ log = get_logger('PlatformAccess')
 
 class IPlatformAccess(object):
 
+    def get_platform_version(self) -> float:
+        raise NotImplementedError()
+
     def enable_wlan_interfaces(self) -> None:
         raise NotImplementedError()
 
@@ -35,6 +38,9 @@ class IPlatformAccess(object):
     def get_ip_address(self, interface: str) -> str:
         raise NotImplementedError()
 
+    def set_ip_address(self, interface: str, ip_address: str, netmask: str = '255.255.255.0') -> None:
+        raise NotImplementedError()
+
     def set_up_ip_tables(self, source_range: str, destination_host: str) -> None:
         raise NotImplementedError()
 
@@ -49,6 +55,10 @@ class IPlatformAccess(object):
 
 
 class PlatformAccess(IPlatformAccess):
+
+    def get_platform_version(self) -> float:
+        with open('/etc/debian_version', 'r') as file:
+            return float(file.read().strip())
 
     def enable_wlan_interfaces(self) -> None:
         self.execute_command('rfkill unblock wlan')
@@ -72,6 +82,12 @@ class PlatformAccess(IPlatformAccess):
     def get_ip_address(self, interface: str) -> str:
         return self._get_address(interface, netifaces.AF_INET)
 
+    def set_ip_address(self, interface: str, ip_address: str, netmask: str = '255.255.255.0') -> None:
+        self.execute_command(f'ifconfig {interface} {ip_address} netmask {netmask}')
+
+        if self.get_ip_address(interface) != ip_address:
+            raise Exception(f'Failed to set IP address {ip_address} on interface {interface}')
+
     def set_up_ip_tables(self, ip_address: str, destination_host: str) -> None:
         source_range = str(ipaddress.IPv4Network(address=f'{ip_address}/255.255.255.0', strict=False))
         command = (f'iptables -t nat -A PREROUTING '
@@ -87,6 +103,7 @@ class PlatformAccess(IPlatformAccess):
 
     def execute_command(self, command: str) -> bytes:
         try:
+            log.debug('Executing command', command=command)
             return subprocess.check_output(command, stderr=subprocess.PIPE, shell=True)
         except subprocess.CalledProcessError as error:
             log.error('Error executing command', command=command, error=error.stderr)

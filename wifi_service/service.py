@@ -8,6 +8,7 @@ from typing import Optional, Any
 from context_logger import get_logger
 from systemd_dbus import Systemd
 
+from wifi_config import WifiNetwork
 from wifi_event import WifiEventType
 from wifi_utility import IPlatformAccess, IJournal
 
@@ -35,6 +36,12 @@ class IService(object):
     def restart(self) -> None:
         raise NotImplementedError()
 
+    def set_auto_start(self, auto_start: bool) -> None:
+        raise NotImplementedError()
+
+    def set_force_stop(self, force_stop: bool) -> None:
+        raise NotImplementedError()
+
     def is_active(self) -> bool:
         raise NotImplementedError()
 
@@ -47,7 +54,7 @@ class IService(object):
     def get_name(self) -> str:
         raise NotImplementedError()
 
-    def get_supported_events(self) -> list[WifiEventType]:
+    def get_supported_events(self) -> set[WifiEventType]:
         raise NotImplementedError()
 
     def register_state_change_handler(self) -> None:
@@ -74,6 +81,8 @@ class Service(IService):
         self._systemd = dependencies.systemd
         self._journal = dependencies.journal
         self._config_reloaded = Event()
+        self._force_stop = False
+        self._auto_start = True
         self._failed = False
         self._last_state: Optional[str] = None
         self._event_callbacks: dict[WifiEventType, Any] = {}
@@ -91,14 +100,25 @@ class Service(IService):
 
     def start(self) -> None:
         self._prepare_start()
+        log.debug('Starting service', service=self._name)
         self._systemd.start_service(self._name)
+        self._complete_start()
 
     def stop(self) -> None:
+        log.debug('Stopping service', service=self._name)
         self._systemd.stop_service(self._name)
 
     def restart(self) -> None:
         self._prepare_start()
+        log.debug('Restarting service', service=self._name)
         self._systemd.restart_service(self._name)
+        self._complete_start()
+
+    def set_auto_start(self, auto_start: bool) -> None:
+        self._auto_start = auto_start
+
+    def set_force_stop(self, force_stop: bool) -> None:
+        self._force_stop = force_stop
 
     def is_active(self) -> bool:
         return self._systemd.is_active(self._name)
@@ -112,8 +132,8 @@ class Service(IService):
     def get_name(self) -> str:
         return self._name
 
-    def get_supported_events(self) -> list[WifiEventType]:
-        return []
+    def get_supported_events(self) -> set[WifiEventType]:
+        return set()
 
     def register_callback(self, event_type: WifiEventType, callback: Any, *args: Any) -> None:
         if event_type in self.get_supported_events():
@@ -126,26 +146,29 @@ class Service(IService):
     def _prepare_start(self) -> None:
         pass
 
-    def _auto_start(self) -> bool:
-        return True
+    def _complete_start(self) -> None:
+        pass
 
-    def _force_stop(self) -> bool:
-        return False
+    def _is_auto_start(self) -> bool:
+        return not self._force_stop and self._auto_start
+
+    def _is_force_stop(self) -> bool:
+        return self._force_stop
 
     def _setup_masking(self) -> None:
-        if self._force_stop() and not self._systemd.is_masked(self._name):
+        if self._is_force_stop() and not self._systemd.is_masked(self._name):
             log.info('Service is unmasked, masking service', service=self._name)
             self._systemd.mask_service(self._name)
             self._systemd.reload_daemon()
 
     def _setup_unmasking(self) -> None:
-        if not self._force_stop() and self._systemd.is_masked(self._name):
+        if not self._is_force_stop() and self._systemd.is_masked(self._name):
             log.info('Service is masked, unmasking service', service=self._name)
             self._systemd.unmask_service(self._name)
             self._systemd.reload_daemon()
 
     def _setup_auto_start(self) -> None:
-        if self._auto_start():
+        if self._is_auto_start():
             if not self.is_enabled():
                 log.info('Service is not enabled, enabling service', service=self._name)
                 self._systemd.enable_service(self._name)
@@ -176,7 +199,7 @@ class Service(IService):
             if self._need_config_setup():
                 raise ServiceError(self._name, 'Configuration check failed after setup')
 
-            if self._auto_start():
+            if self._is_auto_start():
                 self._reload_config()
                 self._config_reloaded.wait()
         self._config_reloaded.set()
@@ -212,7 +235,7 @@ class Service(IService):
             log.error('Service failed, loading journal entries', service=self._name)
             self._failed = True
             self._journal.log_last_entries(self._name, 5)
-            if not self._force_stop():
+            if not self._is_force_stop():
                 log.error('Service failed, restarting service', service=self._name)
                 self.restart()
         elif state == 'active':
@@ -222,7 +245,7 @@ class Service(IService):
             if not self._config_reloaded.is_set() and self._last_state == 'activating':
                 log.info('Service configuration reloaded', service=self._name)
                 self._config_reloaded.set()
-            if self._force_stop():
+            if self._is_force_stop():
                 log.info('Force stopping service', service=self._name)
                 self.stop()
 
@@ -247,10 +270,10 @@ class WifiClientService(WifiService):
     def get_network_count(self) -> int:
         raise NotImplementedError()
 
-    def get_networks(self) -> list[dict[str, Any]]:
+    def get_networks(self) -> list[WifiNetwork]:
         raise NotImplementedError()
 
-    def add_network(self, network: dict[str, Any]) -> None:
+    def add_network(self, network: WifiNetwork) -> None:
         raise NotImplementedError()
 
 

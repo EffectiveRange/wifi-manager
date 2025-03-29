@@ -137,6 +137,14 @@ class WifiWebServer(IWebServer):
 
             return ('Configured network', 200) if self._network_configured else ('Failed to configure network', 400)
 
+        @self._app.route('/api/restart', methods=['POST'])
+        def restart_by_api() -> tuple[str, int]:
+            log.info('Restart API request', request=request)
+
+            restart_requested = self._event_handler.on_restart_requested()
+
+            return ('Restarted client mode', 200) if restart_requested else ('Failed to restart client mode', 400)
+
         @self._app.route('/api/identify', methods=['POST'])
         def identify_by_api() -> tuple[str, int]:
             log.info('Identification API request', request=request)
@@ -164,10 +172,47 @@ class WifiWebServer(IWebServer):
                 result = 'Configured network' if self._network_configured else 'Failed to configure network'
 
                 return render_template(
-                    'configure.html', hostname=self._hostname, ssid=ssid, password=password, result=result
+                    'configure.html',
+                    hostname=self._hostname,
+                    ssid=ssid,
+                    password=password,
+                    configure_result=result,
+                    restart_result='...'
                 )
 
-            return render_template('configure.html', hostname=self._hostname, ssid='', password='', result='...')
+            return render_template(
+                'configure.html',
+                hostname=self._hostname,
+                ssid='',
+                password='',
+                configure_result='...',
+                restart_result='...'
+            )
+
+        @self._app.route('/web/restart', methods=['GET', 'POST'])
+        def restart_by_web() -> str:
+            log.info('Restart web request', request=request)
+
+            if request.method == 'POST':
+                restart_requested = self._event_handler.on_restart_requested()
+
+                result = 'Restarted client mode' if restart_requested else 'Failed to restart client mode'
+
+                return render_template(
+                    'configure.html',
+                    hostname=self._hostname,
+                    configure_result='...',
+                    restart_result=result
+                )
+
+            return render_template(
+                'configure.html',
+                hostname=self._hostname,
+                ssid='',
+                password='',
+                configure_result='...',
+                restart_result='...'
+            )
 
         @self._app.route('/web/identify', methods=['GET', 'POST'])
         def identify_by_web() -> str:

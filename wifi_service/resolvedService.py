@@ -14,9 +14,4 @@ class SystemdResolvedService(Service):
 
     def __init__(self, dependencies: ServiceDependencies) -> None:
         super().__init__('systemd-resolved', self._SYSTEMD_DBUS_PATH, dependencies)
-
-    def _auto_start(self) -> bool:
-        return False
-
-    def _force_stop(self) -> bool:
-        return True
+        self.set_auto_start(False)
