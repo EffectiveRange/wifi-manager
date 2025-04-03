@@ -14,6 +14,6 @@ on:
 
 jobs:
   call_ci:
-    uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@v3
+    uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@v4
     with:
       package-type: 'wheel, dh-virtualenv'
