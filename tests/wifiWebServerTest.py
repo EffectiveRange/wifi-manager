@@ -90,6 +90,40 @@ class WifiWebServerTest(TestCase):
             event_handler.on_add_network_requested.assert_not_called()
             self.assertEqual(400, response.status_code)
 
+    def test_returned_200_when_restarted_client_by_api(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        event_handler.on_identify_requested.return_value = True
+
+        with WifiWebServer(configuration, platform, event_handler) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/api/restart')
+
+            # Then
+            event_handler.on_restart_requested.assert_called()
+            self.assertEqual(200, response.status_code)
+
+    def test_returned_400_when_failed_to_restart_client_by_api(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        event_handler.on_restart_requested.return_value = False
+
+        with WifiWebServer(configuration, platform, event_handler) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/api/restart')
+
+            # Then
+            event_handler.on_restart_requested.assert_called()
+            self.assertEqual(400, response.status_code)
+
     def test_returned_200_when_identified_device_by_api(self):
         # Given
         configuration = create_configuration()
@@ -226,6 +260,40 @@ class WifiWebServerTest(TestCase):
             # Then
             event_handler.on_add_network_requested.assert_not_called()
             self.assertIn('Failed to configure network', response.text)
+
+    def test_returned_success_when_restarted_client_by_web(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        event_handler.on_restart_requested.return_value = True
+
+        with WifiWebServer(configuration, platform, event_handler) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/web/restart')
+
+            # Then
+            event_handler.on_restart_requested.assert_called()
+            self.assertIn('Restarted client mode', response.text)
+
+    def test_returned_failure_when_failed_to_restart_client_by_web(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        event_handler.on_restart_requested.return_value = False
+
+        with WifiWebServer(configuration, platform, event_handler) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/web/restart')
+
+            # Then
+            event_handler.on_restart_requested.assert_called()
+            self.assertIn('Failed to restart client mode', response.text)
 
     def test_returned_success_when_identified_device_by_web(self):
         # Given

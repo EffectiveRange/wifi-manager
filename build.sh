@@ -1,23 +1,10 @@
-#!/bin/bash
-set -e
-
 WORKSPACE="/workspaces/wifi-manager"
 BUILDROOT="/var/chroot/buildroot"
 
-# Clean workspace
-make clean
+sudo rsync -av --exclude ".git" --mkpath "${WORKSPACE}/" "${BUILDROOT}${WORKSPACE}/"
 
-# Copy workspace into buildroot
-rsync -av --exclude ".git" --exclude "*cache" --mkpath "$WORKSPACE/" "$BUILDROOT$WORKSPACE/"
+sudo schroot -p -c buildroot -- apt update
+sudo schroot -p -c buildroot -- apt install -y python3-stdeb packaging-tools
+sudo schroot -p -c buildroot -- pack_python . -s dh-virtualenv
 
-# Build distribution packages
-schroot -p -c buildroot -- apt update
-schroot -p -c buildroot -- apt install -y packaging-tools
-schroot -p -c buildroot -- pack_python . --all
-
-# Copy packages to workspace
-rsync -av \
-    --include "wifi-manager-*.tar.gz" \
-    --include "wifi_manager-*.whl" \
-    --include "wifi-manager_*.deb" \
-    --exclude "*" --mkpath "$BUILDROOT$WORKSPACE/dist/" "$WORKSPACE/dist/"
+sudo rsync -av --include "*" --mkpath "${BUILDROOT}${WORKSPACE}/dist/" "${WORKSPACE}/dist/"

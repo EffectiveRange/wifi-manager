@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Ferenc Nandor Janky <ferenj@effective-range.com>
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
-
+import time
 from enum import Enum
 from typing import Any, Optional
 
@@ -53,19 +53,20 @@ class HostapdService(WifiHotspotService):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/hostapd_2eservice'
 
     def __init__(
-        self,
-        dependencies: ServiceDependencies,
-        config: HostapdConfig,
-        dhcp_server: DhcpServerService,
-        resource_root: str,
-        template_file: str = 'config/hostapd.conf.template',
-        config_file: str = '/etc/hostapd/hostapd.conf',
+            self,
+            dependencies: ServiceDependencies,
+            config: HostapdConfig,
+            dhcp_server: DhcpServerService,
+            resource_root: str,
+            template_file: str = 'config/hostapd.conf.template',
+            config_file: str = '/etc/hostapd/hostapd.conf',
     ) -> None:
         super().__init__('hostapd', self._SYSTEMD_DBUS_PATH, dependencies)
         self._config_file = config_file
         self._config = config
         self._dhcp_server = dhcp_server
         self._configuration = render_template_file(resource_root, template_file, config.to_dict())
+        self.set_auto_start(False)
 
     def start(self) -> None:
         self._dhcp_server.start()
@@ -75,8 +76,8 @@ class HostapdService(WifiHotspotService):
         self._dhcp_server.restart()
         super().restart()
 
-    def get_supported_events(self) -> list[WifiEventType]:
-        return [event.value for event in HostapdStateEvent]
+    def get_supported_events(self) -> set[WifiEventType]:
+        return {event.value for event in HostapdStateEvent}
 
     def get_interface(self) -> str:
         return self._config.interface
@@ -87,8 +88,9 @@ class HostapdService(WifiHotspotService):
     def get_hotspot_ip(self) -> str:
         return self._dhcp_server.get_static_ip()
 
-    def _auto_start(self) -> bool:
-        return False
+    def _prepare_start(self) -> None:
+        self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
+        time.sleep(2)
 
     def _need_config_setup(self) -> bool:
         expected_config = self._configuration.splitlines()

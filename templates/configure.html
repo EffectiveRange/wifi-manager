@@ -16,7 +16,11 @@
                                              type="password"
                                              value="{{ password }}">
         <button type="submit" value="Submit">Configure</button>
-        <label id="result">{{ result }}</label>
+        <label id="result">{{ configure_result }}</label>
+    </form>
+    <form action="restart" class="form" method="post">
+        <button type="submit" value="Submit">Restart</button>
+        <label id="result">{{ restart_result }}</label>
     </form>
 </div>
 </body>

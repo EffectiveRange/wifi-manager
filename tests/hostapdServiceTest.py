@@ -67,7 +67,7 @@ class HostapdServiceTest(TestCase):
         # Then
         dependencies.systemd.restart_service.assert_not_called()
 
-    def test_starts_dhcp_server(self):
+    def test_sets_up_interface_and_starts_dhcp_server(self):
         # Given
         dependencies, config, dhcp_server = create_components()
         hostapd_service = HostapdService(
@@ -78,9 +78,10 @@ class HostapdServiceTest(TestCase):
         hostapd_service.start()
 
         # Then
+        dependencies.platform.set_ip_address.assert_called_once_with('wlan0', '192.168.100.1')
         dhcp_server.start.assert_called_once()
 
-    def test_restarts_dhcp_server(self):
+    def test_sets_up_interface_and_restarts_dhcp_server(self):
         # Given
         dependencies, config, dhcp_server = create_components()
         hostapd_service = HostapdService(
@@ -91,6 +92,7 @@ class HostapdServiceTest(TestCase):
         hostapd_service.restart()
 
         # Then
+        dependencies.platform.set_ip_address.assert_called_once_with('wlan0', '192.168.100.1')
         dhcp_server.restart.assert_called_once()
 
     def test_returns_supported_events(self):
@@ -105,7 +107,7 @@ class HostapdServiceTest(TestCase):
 
         # Then
         self.assertEqual(
-            [WifiEventType.HOTSPOT_STARTED, WifiEventType.HOTSPOT_STOPPED, WifiEventType.HOTSPOT_FAILED], result
+            {WifiEventType.HOTSPOT_STARTED, WifiEventType.HOTSPOT_STOPPED, WifiEventType.HOTSPOT_FAILED}, result
         )
 
     def test_returns_hotspot_ssid(self):

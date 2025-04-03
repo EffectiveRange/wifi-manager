@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: [v*.*.*]
+
+  pull_request:
+    branches: [ "main" ]
+    types:
+      - synchronize
+      - opened
+      - reopened
+
+jobs:
+  call_ci:
+    uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@v3
+    with:
+      package-type: 'wheel, dh-virtualenv'

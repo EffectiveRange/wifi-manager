@@ -85,7 +85,7 @@ class DhcpcdServiceTest(TestCase):
         result = dhcpcd_service.get_supported_events()
 
         # Then
-        self.assertEqual([WifiEventType.CLIENT_IP_ACQUIRED], result)
+        self.assertEqual({WifiEventType.CLIENT_IP_ACQUIRED}, result)
 
     def test_executed_callback_on_dhcpcd_interface_bound_event(self):
         # Given

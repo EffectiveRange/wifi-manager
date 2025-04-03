@@ -31,8 +31,8 @@ class DhcpcdService(Service):
         self._interface = interface
         self._config_file = config_file
 
-    def get_supported_events(self) -> list[WifiEventType]:
-        return [WifiEventType.CLIENT_IP_ACQUIRED]
+    def get_supported_events(self) -> set[WifiEventType]:
+        return {WifiEventType.CLIENT_IP_ACQUIRED}
 
     def _prepare_start(self) -> None:
         self._platform.execute_command(f'ifconfig {self._interface} 0.0.0.0')

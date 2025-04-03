@@ -67,7 +67,7 @@ class DnsmasqServiceTest(TestCase):
         # Then
         dependencies.systemd.restart_service.assert_not_called()
 
-    def test_start_sets_up_interface(self):
+    def test_start_starts_service(self):
         # Given
         dependencies, system_bus, config = create_components()
         dnsmasq_service = DnsmasqService(
@@ -78,12 +78,9 @@ class DnsmasqServiceTest(TestCase):
         dnsmasq_service.start()
 
         # Then
-        dependencies.platform.execute_command.assert_called_once_with(
-            'ifconfig wlan0 192.168.100.1 netmask 255.255.255.0'
-        )
         dependencies.systemd.start_service.assert_called_once_with('dnsmasq')
 
-    def test_restart_sets_up_interface(self):
+    def test_restart_restarts_service(self):
         # Given
         dependencies, system_bus, config = create_components()
         dnsmasq_service = DnsmasqService(
@@ -94,9 +91,6 @@ class DnsmasqServiceTest(TestCase):
         dnsmasq_service.restart()
 
         # Then
-        dependencies.platform.execute_command.assert_called_once_with(
-            'ifconfig wlan0 192.168.100.1 netmask 255.255.255.0'
-        )
         dependencies.systemd.restart_service.assert_called_once_with('dnsmasq')
 
     def test_returns_supported_events(self):
@@ -111,11 +105,11 @@ class DnsmasqServiceTest(TestCase):
 
         # Then
         self.assertEqual(
-            [
+            {
                 WifiEventType.HOTSPOT_PEER_CONNECTED,
                 WifiEventType.HOTSPOT_PEER_RECONNECTED,
                 WifiEventType.HOTSPOT_PEER_DISCONNECTED,
-            ],
+            },
             result,
         )
 

@@ -2,13 +2,12 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
-from typing import Any, Optional
+from typing import Any
 
 from context_logger import get_logger
 
 from wifi_manager import IWebServer, IEventHandler, IWifiControl, WifiControlState
 from wifi_service import IService, ServiceError
-from wifi_utility import ISsdpServer
 
 log = get_logger('WifiManager')
 
@@ -16,12 +15,11 @@ log = get_logger('WifiManager')
 class WifiManager(object):
 
     def __init__(self, services: list[IService], wifi_control: IWifiControl, event_handler: IEventHandler,
-                 web_server: IWebServer, ssdp_server: Optional[ISsdpServer] = None) -> None:
+                 web_server: IWebServer) -> None:
         self._services = services
         self._wifi_control = wifi_control
         self._event_handler = event_handler
         self._web_server = web_server
-        self._ssdp_server = ssdp_server
 
     def __enter__(self) -> 'WifiManager':
         return self
@@ -37,16 +35,12 @@ class WifiManager(object):
 
             self._handle_initial_status()
 
-            self._start_ssdp_server()
-
             self._web_server.run()
         except ServiceError as error:
             log.error('Fatal error occurred while running service', service=error.service, error=error)
             self.shutdown()
 
     def shutdown(self) -> None:
-        if self._ssdp_server:
-            self._ssdp_server.shutdown()
         self._web_server.shutdown()
         self._event_handler.shutdown()
 
@@ -91,9 +85,4 @@ class WifiManager(object):
 
         if start_client:
             self._wifi_control.start_client_mode()
-
-    def _start_ssdp_server(self) -> None:
-        if self._ssdp_server:
-            ip_address = self._wifi_control.get_ip_address()
-            if ip_address and not self._wifi_control.is_hotspot_ip_set():
-                self._ssdp_server.start(ip_address)
+            self._event_handler.start_client_timer()
