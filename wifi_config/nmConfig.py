@@ -45,7 +45,7 @@ class NetworkManagerConfig(IWifiConfig):
         enabled = str(network.enabled).lower()
         priority = str(network.priority)
 
-        config = ConfigParser(allow_no_value=True)
+        config = ConfigParser(allow_no_value=True, interpolation=None)
 
         file_name = self._get_network_file_name(ssid)
 

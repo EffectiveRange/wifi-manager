@@ -85,7 +85,7 @@ class NetworkManagerConfigTest(TestCase):
         nm_config = NetworkManagerConfig('wlan0', self.NM_CONFIG_FILE, self.NM_NETWORK_DIR)
 
         # When
-        nm_config.add_network(WifiNetwork('test-network3', 'test-password3', True, 2))
+        nm_config.add_network(WifiNetwork('test-network3', 'test-password3%', True, 2))
 
         # Then
         self.assertTrue(compare_files(

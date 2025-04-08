@@ -12,7 +12,7 @@ ssid = test-network3
 
 [wifi-security]
 key-mgmt = wpa-psk
-psk = test-password3
+psk = test-password3%
 
 [ipv4]
 method = auto
