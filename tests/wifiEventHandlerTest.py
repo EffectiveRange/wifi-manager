@@ -29,6 +29,7 @@ class WifiEventHandlerTest(TestCase):
 
         # Then
         wifi_control.register_callback.assert_has_calls([
+            mock.call(WifiEventType.CLIENT_STARTED, event_handler._on_client_started),
             mock.call(WifiEventType.CLIENT_DISABLED, event_handler._on_client_not_connected),
             mock.call(WifiEventType.CLIENT_INACTIVE, event_handler._on_client_not_connected),
             mock.call(WifiEventType.CLIENT_SCANNING, event_handler._on_client_not_connected),
@@ -39,6 +40,18 @@ class WifiEventHandlerTest(TestCase):
             mock.call(WifiEventType.HOTSPOT_PEER_RECONNECTED, event_handler._on_peer_connected),
             mock.call(WifiEventType.HOTSPOT_PEER_DISCONNECTED, event_handler._on_peer_disconnected)
         ], any_order=True)
+
+    def test_timer_started_when_client_started(self):
+        # Given
+        wifi_control, timer, client_timeout, peer_timeout = create_mocks()
+
+        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, peer_timeout)
+
+        # When
+        event_handler._on_client_started(WifiEventType.CLIENT_SCANNING, None)
+
+        # Then
+        timer.start.assert_called_once_with(15, event_handler._on_client_connect_timeout)
 
     def test_timer_started_when_client_not_connected(self):
         # Given

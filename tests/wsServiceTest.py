@@ -126,6 +126,9 @@ class WpaSupplicantServiceTest(TestCase):
         # Then
         self.assertEqual(
             {
+                WifiEventType.CLIENT_STARTED,
+                WifiEventType.CLIENT_STOPPED,
+                WifiEventType.CLIENT_FAILED,
                 WifiEventType.CLIENT_DISABLED,
                 WifiEventType.CLIENT_INACTIVE,
                 WifiEventType.CLIENT_SCANNING,

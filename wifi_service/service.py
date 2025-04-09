@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 Ferenc Nandor Janky <ferenj@effective-range.com>
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
-
+from enum import Enum
 from threading import Event
 from typing import Optional, Any
 
@@ -260,6 +260,38 @@ class WifiService(Service):
 
     def get_mac_address(self) -> str:
         return self._platform.get_mac_address(self.get_interface())
+
+
+class WifiClientStateEvent(Enum):
+    active = WifiEventType.CLIENT_STARTED
+    inactive = WifiEventType.CLIENT_STOPPED
+    failed = WifiEventType.CLIENT_FAILED
+
+    def __repr__(self) -> str:
+        return self.name
+
+    @staticmethod
+    def to_wifi_event(name: str) -> Optional['WifiEventType']:
+        if name in WifiClientStateEvent.__members__:
+            return WifiClientStateEvent[name].value
+        else:
+            return None
+
+
+class WifiHotspotStateEvent(Enum):
+    active = WifiEventType.HOTSPOT_STARTED
+    inactive = WifiEventType.HOTSPOT_STOPPED
+    failed = WifiEventType.HOTSPOT_FAILED
+
+    def __repr__(self) -> str:
+        return self.name
+
+    @staticmethod
+    def to_wifi_event(name: str) -> Optional['WifiEventType']:
+        if name in WifiHotspotStateEvent.__members__:
+            return WifiHotspotStateEvent[name].value
+        else:
+            return None
 
 
 class WifiClientService(WifiService):

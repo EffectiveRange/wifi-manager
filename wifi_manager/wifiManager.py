@@ -85,4 +85,3 @@ class WifiManager(object):
 
         if start_client:
             self._wifi_control.start_client_mode()
-            self._event_handler.start_client_timer()

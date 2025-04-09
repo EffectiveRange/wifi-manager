@@ -1,33 +1,17 @@
 # SPDX-FileCopyrightText: 2024 Ferenc Nandor Janky <ferenj@effective-range.com>
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
+
 import time
-from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from common_utility import render_template_file, is_file_contains_lines, create_file
 from context_logger import get_logger
 
 from wifi_event import WifiEventType
-from wifi_service import WifiHotspotService, ServiceDependencies, DhcpServerService
+from wifi_service import WifiHotspotService, ServiceDependencies, DhcpServerService, WifiHotspotStateEvent
 
 log = get_logger('HostapdService')
-
-
-class HostapdStateEvent(Enum):
-    active = WifiEventType.HOTSPOT_STARTED
-    inactive = WifiEventType.HOTSPOT_STOPPED
-    failed = WifiEventType.HOTSPOT_FAILED
-
-    def __repr__(self) -> str:
-        return self.name
-
-    @staticmethod
-    def to_wifi_event(name: str) -> Optional['WifiEventType']:
-        if name in HostapdStateEvent.__members__:
-            return HostapdStateEvent[name].value
-        else:
-            return None
 
 
 class HostapdConfig(object):
@@ -77,7 +61,7 @@ class HostapdService(WifiHotspotService):
         super().restart()
 
     def get_supported_events(self) -> set[WifiEventType]:
-        return {event.value for event in HostapdStateEvent}
+        return {event.value for event in WifiHotspotStateEvent}
 
     def get_interface(self) -> str:
         return self._config.interface
@@ -102,6 +86,6 @@ class HostapdService(WifiHotspotService):
 
     def _on_service_state_changed(self, state: str) -> None:
         super()._on_service_state_changed(state)
-        event_type = HostapdStateEvent.to_wifi_event(state)
+        event_type = WifiHotspotStateEvent.to_wifi_event(state)
         if event_type:
             self._execute_callback(event_type, {})
