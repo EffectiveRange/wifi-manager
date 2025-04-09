@@ -2,6 +2,8 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
+import time
+
 import gi
 
 from wifi_config import WifiNetwork
@@ -22,6 +24,11 @@ log = get_logger('NetworkManagerDbus')
 
 
 class NetworkManagerDbus(IWifiDbus):
+    NO_SCAN_STATES = {
+        NM.DeviceState.UNKNOWN,
+        NM.DeviceState.UNMANAGED,
+        NM.DeviceState.UNAVAILABLE,
+    }
 
     def __init__(self, interface: str, client: Client) -> None:
         self._interface = interface
@@ -31,11 +38,19 @@ class NetworkManagerDbus(IWifiDbus):
         return self._interface
 
     def add_connection_handler(self, on_connection_changed: Any) -> None:
-        if device := self._get_device():
-            device.connect('state-changed', on_connection_changed)
-            device.request_scan()
-        else:
-            log.warning('Failed to add connection handler', interface=self._interface)
+        handler_added = False
+
+        while not handler_added:
+            if device := self._get_device():
+                device.connect('state-changed', on_connection_changed)
+                handler_added = True
+                log.info('Added connection handler', interface=self._interface)
+
+                if device.get_state() not in self.NO_SCAN_STATES:
+                    device.request_scan()
+            else:
+                log.warning('Failed to add connection handler, retrying...', interface=self._interface)
+                time.sleep(1)
 
     def get_active_ssid(self) -> Optional[str]:
         if device := self._get_device():

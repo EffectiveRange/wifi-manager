@@ -13,7 +13,7 @@ from context_logger import get_logger
 from wifi_config import IWifiConfig, WifiNetwork
 from wifi_dbus import IWifiDbus
 from wifi_event import WifiEventType
-from wifi_service import WifiClientService, IService, ServiceDependencies
+from wifi_service import WifiClientService, IService, ServiceDependencies, WifiClientStateEvent
 
 log = get_logger('WpaSupplicantService')
 
@@ -61,7 +61,9 @@ class WpaSupplicantService(WifiClientService):
         self._exec_start = f'ExecStart=/sbin/{self._name} -u -s -O {run_dir} -i{self._interface} -c{config_file}\n'
 
     def get_supported_events(self) -> set[WifiEventType]:
-        return {event.value for event in WpaSupplicantEvent}
+        wpa_supplicant_events = {event.value for event in WpaSupplicantEvent}
+        client_state_events = {event.value for event in WifiClientStateEvent}
+        return wpa_supplicant_events.union(client_state_events)
 
     def get_interface(self) -> str:
         return self._interface
@@ -109,6 +111,12 @@ class WpaSupplicantService(WifiClientService):
 
     def _need_service_file_setup(self) -> bool:
         return not is_file_matches_pattern(self._service_file, self._exec_start)
+
+    def _on_service_state_changed(self, state: str) -> None:
+        super()._on_service_state_changed(state)
+        event_type = WifiClientStateEvent.to_wifi_event(state)
+        if event_type:
+            self._execute_callback(event_type, {})
 
     def _on_wpa_properties_changed(self, properties: dict[str, Any]) -> None:
         if state := properties.get('State'):

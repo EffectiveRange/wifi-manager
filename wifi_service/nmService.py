@@ -2,8 +2,6 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
-import time
-
 import gi
 
 from wifi_config import IWifiConfig, WifiNetwork
@@ -20,7 +18,7 @@ from context_logger import get_logger
 
 from wifi_dbus import IWifiDbus
 from wifi_event import WifiEventType
-from wifi_service import ServiceDependencies, WifiClientService
+from wifi_service import ServiceDependencies, WifiClientService, WifiClientStateEvent
 
 log = get_logger('NetworkManagerService')
 
@@ -59,7 +57,9 @@ class NetworkManagerService(WifiClientService):
         self._interface = wifi_dbus.get_interface()
 
     def get_supported_events(self) -> set[WifiEventType]:
-        return {event.value for event in NetworkManagerEvent}
+        network_manager_events = {event.value for event in NetworkManagerEvent}
+        client_state_events = {event.value for event in WifiClientStateEvent}
+        return network_manager_events.union(client_state_events)
 
     def get_interface(self) -> str:
         return self._interface
@@ -77,8 +77,13 @@ class NetworkManagerService(WifiClientService):
         self._wifi_config.add_network(network)
 
     def _complete_start(self) -> None:
-        time.sleep(2)
         self._wifi_dbus.add_connection_handler(self._on_connection_changed)
+
+    def _on_service_state_changed(self, state: str) -> None:
+        super()._on_service_state_changed(state)
+        event_type = WifiClientStateEvent.to_wifi_event(state)
+        if event_type:
+            self._execute_callback(event_type, {})
 
     def _on_connection_changed(self, device: Device, new: int, old: int, reason: int) -> None:
         new_state = NM.DeviceState(new).value_name
