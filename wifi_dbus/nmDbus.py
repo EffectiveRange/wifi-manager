@@ -24,11 +24,6 @@ log = get_logger('NetworkManagerDbus')
 
 
 class NetworkManagerDbus(IWifiDbus):
-    NO_SCAN_STATES = {
-        NM.DeviceState.UNKNOWN,
-        NM.DeviceState.UNMANAGED,
-        NM.DeviceState.UNAVAILABLE,
-    }
 
     def __init__(self, interface: str, client: Client) -> None:
         self._interface = interface
@@ -45,9 +40,6 @@ class NetworkManagerDbus(IWifiDbus):
                 device.connect('state-changed', on_connection_changed)
                 handler_added = True
                 log.info('Added connection handler', interface=self._interface)
-
-                if device.get_state() not in self.NO_SCAN_STATES:
-                    device.request_scan()
             else:
                 log.warning('Failed to add connection handler, retrying...', interface=self._interface)
                 time.sleep(1)

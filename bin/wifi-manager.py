@@ -84,8 +84,7 @@ def main() -> None:
     platform.disable_wlan_power_save(wlan_interface)
 
     if platform_config.setup():
-        log.warning('Platform configuration changed, rebooting')
-        platform.reboot()
+        log.warning('Platform configuration changed, reboot to apply changes')
 
     cpu_serial = platform.get_cpu_serial()
     mac_address = platform.get_mac_address(wlan_interface)

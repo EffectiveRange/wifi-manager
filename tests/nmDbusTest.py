@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from context_logger import setup_logging
 from gi.repository import GLib
-from gi.repository.NM import Client, DeviceWifi, AccessPoint, Device, DeviceState
+from gi.repository.NM import Client, DeviceWifi, AccessPoint, Device
 
 from wifi_config import WifiNetwork
 from wifi_dbus import NetworkManagerDbus
@@ -30,11 +30,10 @@ class NmDbusTest(TestCase):
         # Then
         self.assertEqual('wlan0', result)
 
-    def test_add_connection_handler_and_initiate_scan(self):
+    def test_add_connection_handler(self):
         # Given
         client, device = create_components()
         client.get_device_by_iface.side_effect = [None, None, device]
-        client.get_state.return_value = DeviceState.DISCONNECTED
         nm_dbus = NetworkManagerDbus('wlan0', client)
 
         handler = MagicMock()
@@ -44,23 +43,6 @@ class NmDbusTest(TestCase):
 
         # Then
         device.connect.assert_called_once_with('state-changed', handler)
-        device.request_scan.assert_called_once()
-
-    def test_add_connection_handler_when_not_able_to_scan(self):
-        # Given
-        client, device = create_components()
-        client.get_device_by_iface.return_value = device
-        client.get_state.return_value = DeviceState.UNAVAILABLE
-        nm_dbus = NetworkManagerDbus('wlan0', client)
-
-        handler = MagicMock()
-
-        # When
-        nm_dbus.add_connection_handler(handler)
-
-        # Then
-        device.connect.assert_called_once_with('state-changed', handler)
-        device.request_scan.assert_called_once()
 
     def test_get_active_ssid(self):
         # Given
