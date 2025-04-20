@@ -33,8 +33,8 @@ class NmDbusTest(TestCase):
     def test_add_connection_handler(self):
         # Given
         client, device = create_components()
-        client.get_device_by_iface.side_effect = [None, None, device]
-        nm_dbus = NetworkManagerDbus('wlan0', client)
+        client.get_devices.side_effect = [[], [], [device]]
+        nm_dbus = NetworkManagerDbus('wlan0', client, 2, 0)
 
         handler = MagicMock()
 
@@ -43,6 +43,20 @@ class NmDbusTest(TestCase):
 
         # Then
         device.connect.assert_called_once_with('state-changed', handler)
+
+    def test_add_connection_handler_when_exceeding_max_retries(self):
+        # Given
+        client, device = create_components()
+        client.get_devices.side_effect = [[], [], [], [device]]
+        nm_dbus = NetworkManagerDbus('wlan0', client, 2, 0)
+
+        handler = MagicMock()
+
+        # When
+        nm_dbus.add_connection_handler(handler)
+
+        # Then
+        device.connect.assert_not_called()
 
     def test_get_active_ssid(self):
         # Given

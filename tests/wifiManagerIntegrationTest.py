@@ -12,6 +12,7 @@ from systemd_dbus import Systemd
 from test_utility import wait_for_assertion, wait_for_condition
 
 from tests import RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
+from wifi_config import WpaSupplicantConfig
 from wifi_dbus import WpaSupplicantDbus
 from wifi_event import WifiEventType
 from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl
@@ -27,7 +28,6 @@ from wifi_service import (
     IService,
 )
 from wifi_utility import IPlatformAccess, ServiceJournal
-from wifi_config import WpaSupplicantConfig
 
 
 class WifiManagerIntegrationTest(TestCase):
@@ -285,7 +285,7 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
 
     wpa_config = WpaSupplicantConfig(country, config_file=wpa_config_file)
     dnsmasq_config = DnsmasqConfig(interface, hotspot_ip, dhcp_range, server_port)
-    hostapd_config = HostapdConfig(interface, mac_address, hostname, password, country)
+    hostapd_config = HostapdConfig(interface, mac_address, hostname, password, country, 0)
     service_dependencies = ServiceDependencies(platform, systemd, ServiceJournal(reader))
 
     dns_client_service = AvahiService(
