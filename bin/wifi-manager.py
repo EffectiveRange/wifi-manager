@@ -72,6 +72,7 @@ def main() -> None:
         hotspot_peer_timeout = int(config['hotspot_peer_timeout'])
         hotspot_static_ip = config['hotspot_static_ip']
         hotspot_dhcp_range = config['hotspot_dhcp_range']
+        hotspot_startup_delay = int(config.get('hotspot_startup_delay', 5))
     except KeyError as error:
         raise ValueError(f'Missing configuration key: {error}')
 
@@ -103,7 +104,8 @@ def main() -> None:
         nm_config = NetworkManagerConfig(wlan_interface, wlan_country)
         nm_dbus = NetworkManagerDbus(wlan_interface, nm_client)
         dnsmasq_config = DnsmasqConfig(wlan_interface, hotspot_static_ip, hotspot_dhcp_range, api_server_port)
-        hostapd_config = HostapdConfig(wlan_interface, mac_address, hostname, hotspot_password, wlan_country)
+        hostapd_config = HostapdConfig(wlan_interface, mac_address, hostname, hotspot_password, wlan_country,
+                                       hotspot_startup_delay)
         reader = JournalReader()
         journal = ServiceJournal(reader)
         service_dependencies = ServiceDependencies(platform, systemd, journal)
@@ -197,6 +199,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument('--hotspot-peer-timeout', help='peer timeout in seconds', type=int)
     parser.add_argument('--hotspot-static-ip', help='hotspot static IP address')
     parser.add_argument('--hotspot-dhcp-range', help='hotspot DHCP range')
+    parser.add_argument('--hotspot-startup-delay', help='hotspot startup delay in seconds', type=int)
 
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 

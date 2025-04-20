@@ -25,24 +25,29 @@ log = get_logger('NetworkManagerDbus')
 
 class NetworkManagerDbus(IWifiDbus):
 
-    def __init__(self, interface: str, client: Client) -> None:
+    def __init__(self, interface: str, client: Client, max_retries: int = 5, retry_delay: float = 1) -> None:
         self._interface = interface
         self._client = client
+        self._max_retries = max_retries
+        self._retry_delay = retry_delay
 
     def get_interface(self) -> str:
         return self._interface
 
     def add_connection_handler(self, on_connection_changed: Any) -> None:
         handler_added = False
+        retry_count = 0
 
-        while not handler_added:
+        while not handler_added and retry_count <= self._max_retries:
             if device := self._get_device():
                 device.connect('state-changed', on_connection_changed)
                 handler_added = True
                 log.info('Added connection handler', interface=self._interface)
             else:
-                log.warning('Failed to add connection handler, retrying...', interface=self._interface)
-                time.sleep(1)
+                retry_count += 1
+                log.warning('Failed to add connection handler, retrying...',
+                            interface=self._interface, retry_count=retry_count)
+                time.sleep(self._retry_delay)
 
     def get_active_ssid(self) -> Optional[str]:
         if device := self._get_device():

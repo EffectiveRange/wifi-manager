@@ -81,8 +81,8 @@ class NetworkManagerService(WifiClientService):
 
     def _on_service_state_changed(self, state: str) -> None:
         super()._on_service_state_changed(state)
-        event_type = WifiClientStateEvent.to_wifi_event(state)
-        if event_type:
+
+        if event_type := NetworkManagerEvent.to_wifi_event(state):
             self._execute_callback(event_type, {})
 
     def _on_connection_changed(self, device: Device, new: int, old: int, reason: int) -> None:

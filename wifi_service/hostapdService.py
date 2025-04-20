@@ -16,12 +16,14 @@ log = get_logger('HostapdService')
 
 class HostapdConfig(object):
 
-    def __init__(self, interface: str, mac_address: str, ssid: str, password: str, country: str) -> None:
+    def __init__(self, interface: str, mac_address: str, ssid: str, password: str, country: str,
+                 startup_delay: int) -> None:
         self.interface = interface
         self.mac_address = mac_address
         self.ssid = ssid
         self.password = password
         self.country = country
+        self.startup_delay = startup_delay
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -74,7 +76,7 @@ class HostapdService(WifiHotspotService):
 
     def _prepare_start(self) -> None:
         self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
-        time.sleep(2)
+        time.sleep(self._config.startup_delay)
 
     def _need_config_setup(self) -> bool:
         expected_config = self._configuration.splitlines()
