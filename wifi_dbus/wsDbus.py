@@ -319,3 +319,6 @@ class WpaSupplicantNetwork(WpaSupplicant):
 
     def get_network_ssid(self, network_path: str) -> Any:
         return self.network_properties(network_path)['ssid'].strip("\"")
+
+    def reset_wireless(self) -> None:
+        pass

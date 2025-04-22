@@ -1,5 +1,5 @@
 import unittest
-from unittest import TestCase
+from unittest import TestCase, mock
 from unittest.mock import MagicMock
 
 from context_logger import setup_logging
@@ -137,6 +137,17 @@ class NmDbusTest(TestCase):
         client.activate_connection_async.assert_not_called()
         client.add_connection_finish.assert_called_once()
         client.activate_connection_finish.assert_not_called()
+
+    def test_reset_wireless(self):
+        # Given
+        client, device = create_components()
+        nm_dbus = NetworkManagerDbus('wlan0', client)
+
+        # When
+        nm_dbus.reset_wireless()
+
+        # Then
+        client.wireless_set_enabled.assert_has_calls([mock.call(False), mock.call(True)])
 
 
 def create_components():

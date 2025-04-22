@@ -308,6 +308,9 @@ class WifiClientService(WifiService):
     def add_network(self, network: WifiNetwork) -> None:
         raise NotImplementedError()
 
+    def reset_wireless(self) -> None:
+        raise NotImplementedError()
+
 
 class WifiHotspotService(WifiService):
 

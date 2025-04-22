@@ -83,6 +83,9 @@ class WpaSupplicantService(WifiClientService):
 
         self._wifi_config.add_network(network)
 
+    def reset_wireless(self) -> None:
+        self._wifi_dbus.reset_wireless()
+
     def _prepare_start(self) -> None:
         delete_file(self._run_file)
         self._dhcp_client.start()

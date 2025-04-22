@@ -212,6 +212,18 @@ class WpaSupplicantServiceTest(TestCase):
         wifi_dbus.add_network.assert_called_once_with(network)
         wifi_config.add_network.assert_called_once_with(network)
 
+    def test_resets_wireless(self):
+        # Given
+        dependencies, wifi_config, wifi_dbus, dhcp_client = create_components()
+        wpa_supplicant_service = WpaSupplicantService(dependencies, wifi_config, wifi_dbus, dhcp_client,
+                                                      service_file=self.WPA_SERVICE_FILE)
+
+        # When
+        wpa_supplicant_service.reset_wireless()
+
+        # Then
+        wifi_dbus.reset_wireless.assert_called_once_with()
+
     def test_executed_callback_on_wpa_state_change_event(self):
         # Given
         dependencies, wifi_config, wifi_dbus, dhcp_client = create_components()

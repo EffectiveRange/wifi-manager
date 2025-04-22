@@ -8,6 +8,7 @@ import subprocess
 
 import netifaces
 from context_logger import get_logger
+from ping3 import ping
 
 log = get_logger('PlatformAccess')
 
@@ -51,6 +52,9 @@ class IPlatformAccess(object):
         raise NotImplementedError()
 
     def reboot(self) -> None:
+        raise NotImplementedError()
+
+    def ping_default_gateway(self, timeout: int) -> bool:
         raise NotImplementedError()
 
 
@@ -111,6 +115,16 @@ class PlatformAccess(IPlatformAccess):
 
     def reboot(self) -> None:
         self.execute_command('reboot')
+
+    def ping_default_gateway(self, timeout: int) -> bool:
+        if gateway := netifaces.gateways().get('default'):
+            if default_gateway := gateway[netifaces.AF_INET][0]:
+                try:
+                    return bool(ping(default_gateway, timeout=timeout))
+                except Exception:
+                    return False
+
+        return False
 
     def _get_address(self, interface: str, address_family: int) -> str:
         address = netifaces.ifaddresses(interface).get(address_family)

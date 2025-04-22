@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from context_logger import setup_logging
 from parameterized import parameterized
 
+from wifi_config import WifiNetwork
 from wifi_event import WifiEventType
 from wifi_manager import WifiControl, WifiControlState
 from wifi_service import WifiClientService, WifiHotspotService, IService
@@ -270,7 +271,7 @@ class WifiControlTest(TestCase):
         wifi_control = WifiControl(client_service, hotspot_service)
 
         # When
-        network = {'ssid': 'test-network', 'password': 'test-password'}
+        network = WifiNetwork('test-network', 'test-password', True, 1)
         wifi_control.add_network(network)
 
         # Then
