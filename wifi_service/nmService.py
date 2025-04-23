@@ -76,6 +76,9 @@ class NetworkManagerService(WifiClientService):
     def add_network(self, network: WifiNetwork) -> None:
         self._wifi_config.add_network(network)
 
+    def reset_wireless(self) -> None:
+        self._wifi_dbus.reset_wireless()
+
     def _complete_start(self) -> None:
         self._wifi_dbus.add_connection_handler(self._on_connection_changed)
 

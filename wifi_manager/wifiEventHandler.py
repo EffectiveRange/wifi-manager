@@ -8,6 +8,7 @@ from common_utility import IReusableTimer
 from context_logger import get_logger
 
 from wifi_config import WifiNetwork
+from wifi_connection import IConnectionMonitor
 from wifi_event import WifiEventType
 from wifi_manager import IWifiControl, WifiControlState
 
@@ -41,13 +42,15 @@ class WifiEventHandler(IEventHandler):
             self,
             wifi_control: IWifiControl,
             timer: IReusableTimer,
+            connection_monitor: IConnectionMonitor,
             client_timeout: int,
             peer_timeout: int,
     ) -> None:
-        self._client_timeout = client_timeout
-        self._peer_timeout = peer_timeout
         self._wifi_control = wifi_control
         self._timer = timer
+        self._connection_monitor = connection_monitor
+        self._client_timeout = client_timeout
+        self._peer_timeout = peer_timeout
 
     def register_event_handlers(self) -> None:
         self._wifi_control.register_callback(WifiEventType.CLIENT_STARTED, self._on_client_started)
@@ -105,6 +108,7 @@ class WifiEventHandler(IEventHandler):
 
     def shutdown(self) -> None:
         self._timer.cancel()
+        self._connection_monitor.stop()
 
     def _on_client_connect_timeout(self) -> None:
         state = self._wifi_control.get_state()
@@ -137,6 +141,8 @@ class WifiEventHandler(IEventHandler):
             self._timer.start(self._client_timeout, self._on_client_connect_timeout)
 
     def _on_client_not_connected(self, event_type: WifiEventType, data: Any) -> None:
+        self._connection_monitor.stop()
+
         state = self._wifi_control.get_state()
 
         log.info(
@@ -158,7 +164,11 @@ class WifiEventHandler(IEventHandler):
         status = self._wifi_control.get_status()
         log.info('IP address acquired', wifi_mode=state, wifi_event=event_type, network=status)
 
+        self._connection_monitor.start()
+
     def _on_hotspot_started(self, event_type: WifiEventType, data: Any) -> None:
+        self._connection_monitor.stop()
+
         state = self._wifi_control.get_state()
         status = self._wifi_control.get_status()
         log.info('Started Wi-Fi hotspot', wifi_mode=state, wifi_event=event_type, hotspot=status)

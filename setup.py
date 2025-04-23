@@ -9,7 +9,8 @@ setup(
     author_email='info@effective-range.com',
     maintainer='Ferenc Nandor Janky & Attila Gombos',
     maintainer_email='info@effective-range.com',
-    packages=['wifi_utility', 'wifi_event', 'wifi_dbus', 'wifi_config', 'wifi_service', 'wifi_manager'],
+    packages=['wifi_utility', 'wifi_event', 'wifi_dbus', 'wifi_config', 'wifi_service', 'wifi_connection',
+              'wifi_manager'],
     scripts=['bin/wifi-manager.py'],
     data_files=[
         ('config', ['config/wifi-manager.conf', 'config/hostapd.conf.template', 'config/dnsmasq.conf.template']),
@@ -20,6 +21,7 @@ setup(
         'flask',
         'waitress',
         'netifaces',
+        'ping3',
         'dbus-python',
         'PyGObject==3.50.0',
         'pygobject-stubs',

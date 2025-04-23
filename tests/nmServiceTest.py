@@ -115,6 +115,17 @@ class NetworkManagerServiceTest(TestCase):
         # Then
         wifi_config.add_network.assert_called_once_with(network)
 
+    def test_resets_wireless(self):
+        # Given
+        dependencies, wifi_config, wifi_dbus = create_dependencies()
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+
+        # When
+        network_manager_service.reset_wireless()
+
+        # Then
+        wifi_dbus.reset_wireless.assert_called_once_with()
+
     def test_executed_callback_on_connection_change_event(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()

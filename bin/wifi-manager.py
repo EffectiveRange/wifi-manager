@@ -6,6 +6,7 @@
 
 import gi
 
+from wifi_connection import ConnectionMonitorConfig, ConnectionMonitor, ConnectionRestoreAction
 from wifi_dbus import WpaSupplicantDbus, NetworkManagerDbus
 
 gi.require_version('NM', '1.0')
@@ -73,6 +74,10 @@ def main() -> None:
         hotspot_static_ip = config['hotspot_static_ip']
         hotspot_dhcp_range = config['hotspot_dhcp_range']
         hotspot_startup_delay = int(config.get('hotspot_startup_delay', 5))
+        connection_ping_interval = int(config.get('connection_ping_interval', 60))
+        connection_ping_timeout = int(config.get('connection_ping_timeout', 5))
+        connection_ping_fail_limit = int(config.get('connection_ping_fail_limit', 5))
+        connection_restore_actions = config.get('connection_restore_actions', 'reset-wireless').split('\n')
     except KeyError as error:
         raise ValueError(f'Missing configuration key: {error}')
 
@@ -144,13 +149,21 @@ def main() -> None:
 
         wifi_hotspot_service = HostapdService(service_dependencies, hostapd_config, dnsmasq_service, resource_root)
 
-        timer = ReusableTimer()
+        connection_monitor_timer = ReusableTimer()
+        restore_actions = ConnectionRestoreAction.create_actions(connection_restore_actions, wifi_client_service,
+                                                                 systemd, platform)
+        connection_monitor_config = ConnectionMonitorConfig(connection_ping_interval, connection_ping_timeout,
+                                                            connection_ping_fail_limit, list(restore_actions))
+
+        connection_monitor = ConnectionMonitor(platform, connection_monitor_timer, connection_monitor_config)
         wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
-        event_handler = WifiEventHandler(wifi_control, timer, client_timeout, hotspot_peer_timeout)
+        event_handler_timer = ReusableTimer()
+        event_handler = WifiEventHandler(wifi_control, event_handler_timer, connection_monitor,
+                                         client_timeout, hotspot_peer_timeout)
         web_server_config = WebServerConfig(hotspot_static_ip, api_server_port, resource_root)
         web_server = WifiWebServer(web_server_config, platform, event_handler)
 
-        wifi_manager = WifiManager(services, wifi_control, event_handler, web_server)
+        wifi_manager = WifiManager(services, wifi_control, event_handler, connection_monitor, web_server)
 
         event_loop = GLib.MainLoop()
         event_thread = Thread(target=event_loop.run)

@@ -13,6 +13,7 @@ from test_utility import wait_for_assertion, wait_for_condition
 
 from tests import RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_config import WpaSupplicantConfig
+from wifi_connection import ConnectionRestoreAction, ConnectionMonitorConfig, ConnectionMonitor
 from wifi_dbus import WpaSupplicantDbus
 from wifi_event import WifiEventType
 from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl
@@ -43,11 +44,11 @@ class WifiManagerIntegrationTest(TestCase):
     def test_dnsmasq_config_reloaded_and_initialization_completed(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         dhcp_server_service = get_dhcp_server_service(services)
         dhcp_server_service._config_reloaded.clear()
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_assertion(1, systemd.restart_service.assert_called_with, 'dnsmasq')
 
@@ -61,10 +62,10 @@ class WifiManagerIntegrationTest(TestCase):
     def test_timer_cancelled_when_connected_to_a_network(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         wifi_client_service = get_wifi_client_service(services)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
 
@@ -77,9 +78,9 @@ class WifiManagerIntegrationTest(TestCase):
     def test_switched_to_hotspot_when_client_connection_timed_out(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
             systemd.reset_mock()
@@ -94,10 +95,10 @@ class WifiManagerIntegrationTest(TestCase):
     def test_switched_back_to_client_when_peer_connection_timed_out(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         wifi_hotspot_service = get_wifi_hotspot_service(services)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
 
@@ -120,11 +121,11 @@ class WifiManagerIntegrationTest(TestCase):
     def test_timer_cancelled_when_peer_connected_to_hotspot(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         wifi_hotspot_service = get_wifi_hotspot_service(services)
         dhcp_server_service = get_dhcp_server_service(services)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
 
@@ -141,11 +142,11 @@ class WifiManagerIntegrationTest(TestCase):
     def test_switched_back_to_client_when_peer_disconnected_from_hotspot(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         wifi_hotspot_service = get_wifi_hotspot_service(services)
         dhcp_server_service = get_dhcp_server_service(services)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
 
@@ -172,11 +173,11 @@ class WifiManagerIntegrationTest(TestCase):
     def test_switched_back_to_client_when_new_network_configured(self):
         # Given
         platform, systemd, timer = setup_mocks()
-        services, wifi_control, event_handler, web_server = setup_components(platform, systemd, timer)
+        services, wifi_control, event_handler, monitor, web_server = setup_components(platform, systemd, timer)
         wifi_hotspot_service = get_wifi_hotspot_service(services)
         dhcp_server_service = get_dhcp_server_service(services)
 
-        with WifiManager(services, wifi_control, event_handler, web_server) as wifi_manager:
+        with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             Thread(target=wifi_manager.run).start()
             wait_for_initialization(web_server)
             client = web_server._app.test_client()
@@ -308,8 +309,12 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
     wifi_client_service._config_reloaded.set()
     wifi_hotspot_service._config_reloaded.set()
 
+    restore_actions = ConnectionRestoreAction.create_actions(
+        ['reset-wireless', 'restart-service openvpn@*.service'], wifi_client_service, systemd, platform)
+    connection_monitor_config = ConnectionMonitorConfig(60, 5, 3, list(restore_actions))
+    connection_monitor = ConnectionMonitor(platform, MagicMock(spec=IReusableTimer), connection_monitor_config)
     wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
-    event_handler = WifiEventHandler(wifi_control, timer, 15, 120)
+    event_handler = WifiEventHandler(wifi_control, timer, connection_monitor, 15, 120)
     web_server_config = WebServerConfig(hotspot_ip, server_port, RESOURCE_ROOT)
     web_server = WifiWebServer(web_server_config, platform, event_handler)
 
@@ -321,7 +326,7 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
         wifi_hotspot_service,
     ]
 
-    return services, wifi_control, event_handler, web_server
+    return services, wifi_control, event_handler, connection_monitor, web_server
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ from typing import Any
 
 from context_logger import get_logger
 
+from wifi_connection import IConnectionMonitor
 from wifi_manager import IWebServer, IEventHandler, IWifiControl, WifiControlState
 from wifi_service import IService, ServiceError
 
@@ -15,10 +16,11 @@ log = get_logger('WifiManager')
 class WifiManager(object):
 
     def __init__(self, services: list[IService], wifi_control: IWifiControl, event_handler: IEventHandler,
-                 web_server: IWebServer) -> None:
+                 connection_monitor: IConnectionMonitor, web_server: IWebServer) -> None:
         self._services = services
         self._wifi_control = wifi_control
         self._event_handler = event_handler
+        self._connection_monitor = connection_monitor
         self._web_server = web_server
 
     def __enter__(self) -> 'WifiManager':
@@ -86,5 +88,7 @@ class WifiManager(object):
 
             if start_client:
                 self._wifi_control.start_client_mode()
+            else:
+                self._connection_monitor.start()
         except Exception as error:
             log.error('Error occurred while handling initial status', error=error)
