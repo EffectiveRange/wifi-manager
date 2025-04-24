@@ -81,6 +81,7 @@ class NetworkManagerService(WifiClientService):
 
     def _complete_start(self) -> None:
         self._wifi_dbus.add_connection_handler(self._on_connection_changed)
+        self._wifi_dbus.enable_wireless()
 
     def _on_service_state_changed(self, state: str) -> None:
         super()._on_service_state_changed(state)

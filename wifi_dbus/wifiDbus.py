@@ -38,6 +38,9 @@ class IWifiDbus(object):
     def reset_wireless(self) -> None:
         raise NotImplementedError()
 
+    def enable_wireless(self) -> None:
+        raise NotImplementedError()
+
 
 def bytes_to_str(glib_bytes: GLib.Bytes) -> str:
     data = glib_bytes.get_data()

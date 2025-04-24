@@ -87,6 +87,9 @@ class NetworkManagerDbus(IWifiDbus):
         time.sleep(1)
         self._client.wireless_set_enabled(True)
 
+    def enable_wireless(self) -> None:
+        self._client.wireless_set_enabled(True)
+
     def _activate_network(self, ssid: str, connection: Connection) -> None:
         if device := self._get_device():
             device.request_scan()
