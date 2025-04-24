@@ -44,6 +44,7 @@ class ConnectionMonitorTest(TestCase):
         # Given
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.return_value = True
+        platform.ping_tunnel_endpoint.return_value = True
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -51,12 +52,32 @@ class ConnectionMonitorTest(TestCase):
 
         # Then
         platform.ping_default_gateway.assert_called_once_with(5)
+        platform.ping_tunnel_endpoint.assert_called_once_with(5)
         timer.restart.assert_called_once()
 
     def test_should_reset_failure_counter_when_ping_is_successful(self):
         # Given
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.side_effect = [False, False, True]
+        platform.ping_tunnel_endpoint.return_value = True
+        connection_monitor = ConnectionMonitor(platform, timer, config)
+
+        # When
+        connection_monitor._check_connection()
+        connection_monitor._check_connection()
+        connection_monitor._check_connection()
+
+        # Then
+        platform.ping_default_gateway.assert_called_with(5)
+        platform.ping_tunnel_endpoint.assert_called_once_with(5)
+        self.assertEqual(0, connection_monitor._failures)
+        timer.restart.assert_called()
+
+    def test_should_run_connection_restore_actions_when_failed_to_ping_default_gateway(self):
+        # Given
+        platform, timer, config = create_dependencies()
+        platform.ping_default_gateway.side_effect = [False, False, False]
+        config.restore_actions = [MagicMock(spec=ConnectionRestoreAction), MagicMock(spec=ConnectionRestoreAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -67,12 +88,15 @@ class ConnectionMonitorTest(TestCase):
         # Then
         platform.ping_default_gateway.assert_called()
         self.assertEqual(0, connection_monitor._failures)
+        config.restore_actions[0].run.assert_called_once()
+        config.restore_actions[1].run.assert_called_once()
         timer.restart.assert_called()
 
-    def test_should_run_connection_restore_actions(self):
+    def test_should_run_connection_restore_actions_when_failed_to_ping_tunnel_endpoint(self):
         # Given
         platform, timer, config = create_dependencies()
-        platform.ping_default_gateway.side_effect = [False, False, False]
+        platform.ping_default_gateway.return_value = True
+        platform.ping_tunnel_endpoint.side_effect = [False, False, False]
         config.restore_actions = [MagicMock(spec=ConnectionRestoreAction), MagicMock(spec=ConnectionRestoreAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 

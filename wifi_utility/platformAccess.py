@@ -57,6 +57,9 @@ class IPlatformAccess(object):
     def ping_default_gateway(self, timeout: int) -> bool:
         raise NotImplementedError()
 
+    def ping_tunnel_endpoint(self, timeout: int) -> bool:
+        raise NotImplementedError()
+
 
 class PlatformAccess(IPlatformAccess):
 
@@ -125,6 +128,17 @@ class PlatformAccess(IPlatformAccess):
                     return False
 
         return False
+
+    def ping_tunnel_endpoint(self, timeout: int) -> bool:
+        if tunnel_interfaces := [interface for interface in netifaces.interfaces() if interface.startswith('tun')]:
+            if tunnel_address := self.get_ip_address(tunnel_interfaces[0]):
+                try:
+                    tunnel_endpoint = '.'.join(tunnel_address.split('.')[:-1] + ['1'])
+                    return bool(ping(tunnel_endpoint, timeout=timeout))
+                except Exception:
+                    return False
+
+        return True
 
     def _get_address(self, interface: str, address_family: int) -> str:
         address = netifaces.ifaddresses(interface).get(address_family)
