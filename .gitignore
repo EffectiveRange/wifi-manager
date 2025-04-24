@@ -170,5 +170,6 @@ debian/*
 
 # IntelliJ project files
 *.iml
+.idea/
 
 tests/test_root
