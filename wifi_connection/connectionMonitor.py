@@ -46,16 +46,21 @@ class ConnectionMonitor(IConnectionMonitor):
 
     def _check_connection(self) -> None:
         if self._platform.ping_default_gateway(self._config.ping_timeout):
-            self._failures = 0
+            if self._platform.ping_tunnel_endpoint(self._config.ping_timeout):
+                self._failures = 0
+            else:
+                self._failures += 1
+                log.warn("Ping to tunnel endpoint failed", failures=self._failures, timeout=self._config.ping_timeout)
+
         else:
             self._failures += 1
             log.warn("Ping to default gateway failed", failures=self._failures, timeout=self._config.ping_timeout)
 
-            if self._failures >= self._config.ping_fail_limit:
-                self._failures = 0
-                log.error("Failed to reach default gateway, executing restore actions")
+        if self._failures >= self._config.ping_fail_limit:
+            self._failures = 0
+            log.error("Failed to reach default gateway or tunnel endpoint, executing restore actions")
 
-                for action in self._config.restore_actions:
-                    action.run()
+            for action in self._config.restore_actions:
+                action.run()
 
         self._timer.restart()
