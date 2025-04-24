@@ -152,6 +152,7 @@ class NetworkManagerServiceTest(TestCase):
         wifi_dbus.add_connection_handler.assert_called_once_with(
             network_manager_service._on_connection_changed
         )
+        wifi_dbus.enable_wireless.assert_called_once_with()
 
 
 def create_dependencies():

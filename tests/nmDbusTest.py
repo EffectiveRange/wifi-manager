@@ -149,6 +149,17 @@ class NmDbusTest(TestCase):
         # Then
         client.wireless_set_enabled.assert_has_calls([mock.call(False), mock.call(True)])
 
+    def test_enable_wireless(self):
+        # Given
+        client, device = create_components()
+        nm_dbus = NetworkManagerDbus('wlan0', client)
+
+        # When
+        nm_dbus.enable_wireless()
+
+        # Then
+        client.wireless_set_enabled.assert_called_once_with(True)
+
 
 def create_components():
     loopback_device = MagicMock(spec=Device)
