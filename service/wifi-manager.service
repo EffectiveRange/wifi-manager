@@ -1,11 +1,14 @@
 [Unit]
 Description=Wi-Fi manager service
 After=dbus.service wpa_supplicant.service hostapd.service dnsmasq.service
+StartLimitIntervalSec=300
+StartLimitBurst=9
+StartLimitAction=reboot-force
 
 [Service]
 Type=simple
 Restart=always
-RestartSec=10
+RestartSec=30
 ExecStart=/opt/venvs/wifi-manager/bin/python3 /opt/venvs/wifi-manager/bin/wifi-manager.py
 
 [Install]
