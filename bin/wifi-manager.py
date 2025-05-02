@@ -4,12 +4,17 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
+import pathlib
 import gi
 
-from wifi_connection import ConnectionMonitorConfig, ConnectionMonitor, ConnectionRestoreAction
+from wifi_connection import (
+    ConnectionMonitorConfig,
+    ConnectionMonitor,
+    ConnectionRestoreAction,
+)
 from wifi_dbus import WpaSupplicantDbus, NetworkManagerDbus
 
-gi.require_version('NM', '1.0')
+gi.require_version("NM", "1.0")
 import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from pathlib import Path
@@ -27,7 +32,13 @@ from gi.repository import GLib, NM
 from jinja2 import Template
 from systemd_dbus import SystemdDbus
 
-from wifi_manager import WifiControl, WifiEventHandler, WebServerConfig, WifiWebServer, WifiManager
+from wifi_manager import (
+    WifiControl,
+    WifiEventHandler,
+    WebServerConfig,
+    WifiWebServer,
+    WifiManager,
+)
 from wifi_service import (
     WpaSupplicantService,
     DhcpcdService,
@@ -39,13 +50,20 @@ from wifi_service import (
     IService,
     ServiceDependencies,
     NetworkManagerService,
-    SystemdResolvedService, WifiClientService, )
-from wifi_utility import PlatformAccess, WlanInterfaceSelector, ServiceJournal, PlatformConfig
+    SystemdResolvedService,
+    WifiClientService,
+)
+from wifi_utility import (
+    PlatformAccess,
+    WlanInterfaceSelector,
+    ServiceJournal,
+    PlatformConfig,
+)
 from wifi_config import WpaSupplicantConfig, NetworkManagerConfig
 
-APPLICATION_NAME = 'wifi-manager'
+APPLICATION_NAME = "wifi-manager"
 
-log = get_logger('WifiManagerApp')
+log = get_logger("WifiManagerApp")
 
 
 def main() -> None:
@@ -54,51 +72,62 @@ def main() -> None:
 
     setup_logging(APPLICATION_NAME)
 
-    log.info(f'Started {APPLICATION_NAME}', arguments=arguments)
+    log.info(f"Started {APPLICATION_NAME}", arguments=arguments)
 
-    config = ConfigLoader(resource_root, f'config/{APPLICATION_NAME}.conf').load(arguments)
+    config = ConfigLoader(
+        resource_root, f"config/{APPLICATION_NAME}.conf.default"
+    ).load(arguments)
 
     _update_logging(arguments, config)
 
-    log.info('Retrieved configuration', configuration=config)
+    log.info("Retrieved configuration", configuration=config)
 
     try:
-        api_server_port = int(config['api_server_port'])
-        device_role = config['device_role']
-        device_hostname = config['device_hostname']
-        wlan_interface = config['wlan_interface']
-        wlan_country = config['wlan_country']
-        client_timeout = int(config['client_timeout'])
-        hotspot_password = config['hotspot_password']
-        hotspot_peer_timeout = int(config['hotspot_peer_timeout'])
-        hotspot_static_ip = config['hotspot_static_ip']
-        hotspot_dhcp_range = config['hotspot_dhcp_range']
-        hotspot_startup_delay = int(config.get('hotspot_startup_delay', 5))
-        connection_ping_interval = int(config.get('connection_ping_interval', 60))
-        connection_ping_timeout = int(config.get('connection_ping_timeout', 5))
-        connection_ping_fail_limit = int(config.get('connection_ping_fail_limit', 5))
-        connection_restore_actions = config.get('connection_restore_actions', 'reset-wireless').split('\n')
+        api_server_port = int(config["api_server_port"])
+        device_role = config["device_role"]
+        device_hostname = config["device_hostname"]
+        wlan_interface = config["wlan_interface"]
+        wlan_country = config["wlan_country"]
+        client_timeout = int(config["client_timeout"])
+        hotspot_password = config["hotspot_password"]
+        hotspot_peer_timeout = int(config["hotspot_peer_timeout"])
+        hotspot_static_ip = config["hotspot_static_ip"]
+        hotspot_dhcp_range = config["hotspot_dhcp_range"]
+        hotspot_startup_delay = int(config.get("hotspot_startup_delay", 5))
+        connection_ping_interval = int(config.get("connection_ping_interval", 60))
+        connection_ping_timeout = int(config.get("connection_ping_timeout", 5))
+        connection_ping_fail_limit = int(config.get("connection_ping_fail_limit", 5))
+        connection_restore_actions = config.get(
+            "connection_restore_actions", "reset-wireless"
+        ).split("\n")
+        disable_power_save = config.get("wlan_disable_power_save", False)
     except KeyError as error:
-        raise ValueError(f'Missing configuration key: {error}')
+        raise ValueError(f"Missing configuration key: {error}")
 
     platform = PlatformAccess()
     debian_12_or_higher = platform.get_platform_version() >= 12.0
-    platform_config = PlatformConfig('/boot/firmware/config.txt' if debian_12_or_higher else '/boot/config.txt')
+    platform_config = PlatformConfig(
+        "/boot/firmware/config.txt" if debian_12_or_higher else "/boot/config.txt"
+    )
 
     wlan_interface = WlanInterfaceSelector(platform).select(wlan_interface)
-
-    platform.disable_wlan_power_save(wlan_interface)
+    if disable_power_save:
+        platform.disable_wlan_power_save(wlan_interface)
 
     if platform_config.setup():
-        log.warning('Platform configuration changed, reboot to apply changes')
+        log.warning("Platform configuration changed, reboot to apply changes")
 
     cpu_serial = platform.get_cpu_serial()
     mac_address = platform.get_mac_address(wlan_interface)
 
-    id_context = {'device_role': device_role, 'cpu_serial': cpu_serial, 'mac_address': mac_address}
+    id_context = {
+        "device_role": device_role,
+        "cpu_serial": cpu_serial,
+        "mac_address": mac_address,
+    }
 
     hostname = Template(device_hostname).render(id_context)
-    id_context['hostname'] = hostname
+    id_context["hostname"] = hostname
 
     system_bus = SystemBus(DBusGMainLoop(set_as_default=True))
 
@@ -108,9 +137,17 @@ def main() -> None:
         nm_client = NM.Client.new(None)
         nm_config = NetworkManagerConfig(wlan_interface, wlan_country)
         nm_dbus = NetworkManagerDbus(wlan_interface, nm_client)
-        dnsmasq_config = DnsmasqConfig(wlan_interface, hotspot_static_ip, hotspot_dhcp_range, api_server_port)
-        hostapd_config = HostapdConfig(wlan_interface, mac_address, hostname, hotspot_password, wlan_country,
-                                       hotspot_startup_delay)
+        dnsmasq_config = DnsmasqConfig(
+            wlan_interface, hotspot_static_ip, hotspot_dhcp_range, api_server_port
+        )
+        hostapd_config = HostapdConfig(
+            wlan_interface,
+            mac_address,
+            hostname,
+            hotspot_password,
+            wlan_country,
+            hotspot_startup_delay,
+        )
         reader = JournalReader()
         journal = ServiceJournal(reader)
         service_dependencies = ServiceDependencies(platform, systemd, journal)
@@ -121,10 +158,18 @@ def main() -> None:
         systemd_resolved_service = SystemdResolvedService(service_dependencies)
         dhcpcd_service = DhcpcdService(service_dependencies, system_bus, wlan_interface)
         avahi_service = AvahiService(service_dependencies, hostname)
-        network_manager_service = NetworkManagerService(service_dependencies, nm_config, nm_dbus)
-        dnsmasq_service = DnsmasqService(service_dependencies, system_bus, dnsmasq_config, resource_root)
-        wpa_supplicant_service = WpaSupplicantService(service_dependencies, wpa_config, wpa_dbus, dhcpcd_service)
-        hostapd_service = HostapdService(service_dependencies, hostapd_config, dnsmasq_service, resource_root)
+        network_manager_service = NetworkManagerService(
+            service_dependencies, nm_config, nm_dbus
+        )
+        dnsmasq_service = DnsmasqService(
+            service_dependencies, system_bus, dnsmasq_config, resource_root
+        )
+        wpa_supplicant_service = WpaSupplicantService(
+            service_dependencies, wpa_config, wpa_dbus, dhcpcd_service
+        )
+        hostapd_service = HostapdService(
+            service_dependencies, hostapd_config, dnsmasq_service, resource_root
+        )
 
         if debian_12_or_higher:
             _init_service(services, systemd_resolved_service, False)
@@ -147,29 +192,47 @@ def main() -> None:
 
             wifi_client_service = wpa_supplicant_service
 
-        wifi_hotspot_service = HostapdService(service_dependencies, hostapd_config, dnsmasq_service, resource_root)
+        wifi_hotspot_service = HostapdService(
+            service_dependencies, hostapd_config, dnsmasq_service, resource_root
+        )
 
         connection_monitor_timer = ReusableTimer()
-        restore_actions = ConnectionRestoreAction.create_actions(connection_restore_actions, wifi_client_service,
-                                                                 systemd, platform)
-        connection_monitor_config = ConnectionMonitorConfig(connection_ping_interval, connection_ping_timeout,
-                                                            connection_ping_fail_limit, list(restore_actions))
+        restore_actions = ConnectionRestoreAction.create_actions(
+            connection_restore_actions, wifi_client_service, systemd, platform
+        )
+        connection_monitor_config = ConnectionMonitorConfig(
+            connection_ping_interval,
+            connection_ping_timeout,
+            connection_ping_fail_limit,
+            list(restore_actions),
+        )
 
-        connection_monitor = ConnectionMonitor(platform, connection_monitor_timer, connection_monitor_config)
+        connection_monitor = ConnectionMonitor(
+            platform, connection_monitor_timer, connection_monitor_config
+        )
         wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
         event_handler_timer = ReusableTimer()
-        event_handler = WifiEventHandler(wifi_control, event_handler_timer, connection_monitor,
-                                         client_timeout, hotspot_peer_timeout)
-        web_server_config = WebServerConfig(hotspot_static_ip, api_server_port, resource_root)
+        event_handler = WifiEventHandler(
+            wifi_control,
+            event_handler_timer,
+            connection_monitor,
+            client_timeout,
+            hotspot_peer_timeout,
+        )
+        web_server_config = WebServerConfig(
+            hotspot_static_ip, api_server_port, resource_root
+        )
         web_server = WifiWebServer(web_server_config, platform, event_handler)
 
-        wifi_manager = WifiManager(services, wifi_control, event_handler, connection_monitor, web_server)
+        wifi_manager = WifiManager(
+            services, wifi_control, event_handler, connection_monitor, web_server
+        )
 
         event_loop = GLib.MainLoop()
         event_thread = Thread(target=event_loop.run)
 
         def handler(signum: int, frame: Any) -> None:
-            log.info('Shutting down wifi-manager', signum=signum)
+            log.info("Shutting down wifi-manager", signum=signum)
             wifi_manager.shutdown()
 
             event_loop.quit()
@@ -188,33 +251,56 @@ def main() -> None:
 
 def _get_arguments() -> dict[str, Any]:
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    default_config = f"/etc/effective-range/{APPLICATION_NAME}/{APPLICATION_NAME}.conf"
     parser.add_argument(
-        '-c',
-        '--config-file',
-        help='configuration file',
-        default=f'/etc/effective-range/{APPLICATION_NAME}/{APPLICATION_NAME}.conf',
+        "-c",
+        "--config-file",
+        help="configuration file",
+        default=default_config,
     )
 
-    parser.add_argument('-f', '--log-file', help='log file path')
-    parser.add_argument('-l', '--log-level', help='logging level')
+    parser.add_argument("-f", "--log-file", help="log file path")
+    parser.add_argument("-l", "--log-level", help="logging level")
 
-    parser.add_argument('--api-server-port', help='web server port to listen on', type=int)
+    parser.add_argument(
+        "--api-server-port", help="web server port to listen on", type=int
+    )
 
-    parser.add_argument('--device-role', help='device role')
-    parser.add_argument('--device-hostname', help='hostname pattern')
+    parser.add_argument("--device-role", help="device role")
+    parser.add_argument("--device-hostname", help="hostname pattern")
 
-    parser.add_argument('--wlan-interface', help='preferred wlan interface')
-    parser.add_argument('--wlan-country', help='country code')
+    parser.add_argument("--wlan-interface", help="preferred wlan interface")
+    parser.add_argument("--wlan-country", help="country code")
 
-    parser.add_argument('--client-timeout', help='client timeout in seconds', type=int)
+    parser.add_argument("--client-timeout", help="client timeout in seconds", type=int)
 
-    parser.add_argument('--hotspot-password', help='hotspot Wi-Fi password')
-    parser.add_argument('--hotspot-peer-timeout', help='peer timeout in seconds', type=int)
-    parser.add_argument('--hotspot-static-ip', help='hotspot static IP address')
-    parser.add_argument('--hotspot-dhcp-range', help='hotspot DHCP range')
-    parser.add_argument('--hotspot-startup-delay', help='hotspot startup delay in seconds', type=int)
-
-    return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
+    parser.add_argument("--hotspot-password", help="hotspot Wi-Fi password")
+    parser.add_argument(
+        "--hotspot-peer-timeout", help="peer timeout in seconds", type=int
+    )
+    parser.add_argument("--hotspot-static-ip", help="hotspot static IP address")
+    parser.add_argument("--hotspot-dhcp-range", help="hotspot DHCP range")
+    parser.add_argument(
+        "--hotspot-startup-delay", help="hotspot startup delay in seconds", type=int
+    )
+    parser.add_argument("--disable-")
+    parser.add_argument(
+        "--wlan-disable-power-save",
+        help="disable wlan power save mode",
+        type=bool,
+        action="store_true",
+        default=False,
+    )
+    args = parser.parse_args()
+    if (
+        args.config_file == default_config
+        and not pathlib.Path(args.config_file).exists()
+    ):
+        def_config = (
+            f"/etc/effective-range/{APPLICATION_NAME}/{APPLICATION_NAME}.conf.default"
+        )
+        args.config_file = def_config
+    return {k: v for k, v in vars(args).items() if v is not None}
 
 
 def _get_resource_root() -> str:
@@ -222,13 +308,18 @@ def _get_resource_root() -> str:
 
 
 def _update_logging(arguments: dict[str, Any], configuration: dict[str, Any]) -> None:
-    log_level = configuration.get('log_level', 'INFO')
-    log_file = configuration['log_file']
-    if log_level != 'INFO' or log_file != arguments['log_file']:
+    log_level = configuration.get("log_level", "INFO")
+    log_file = configuration["log_file"]
+    if log_level != "INFO" or log_file != arguments["log_file"]:
         setup_logging(APPLICATION_NAME, log_level, log_file, warn_on_overwrite=False)
 
 
-def _init_service(services: list[IService], service: IService, is_required: bool, is_managed: bool = True) -> None:
+def _init_service(
+    services: list[IService],
+    service: IService,
+    is_required: bool,
+    is_managed: bool = True,
+) -> None:
     if service.is_installed():
         if is_required:
             if is_managed:
@@ -237,8 +328,8 @@ def _init_service(services: list[IService], service: IService, is_required: bool
             service.set_force_stop(True)
     else:
         if is_required:
-            raise ValueError(f'Mandatory {service.get_name()} service is not installed')
+            raise ValueError(f"Mandatory {service.get_name()} service is not installed")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

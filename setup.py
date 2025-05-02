@@ -13,7 +13,7 @@ setup(
               'wifi_manager'],
     scripts=['bin/wifi-manager.py'],
     data_files=[
-        ('config', ['config/wifi-manager.conf', 'config/hostapd.conf.template', 'config/dnsmasq.conf.template']),
+        ('config', ['config/wifi-manager.conf.default', 'config/hostapd.conf.template', 'config/dnsmasq.conf.template']),
         ('templates', ['templates/configure.html', 'templates/identify.html']),
         ('static', ['static/style.css']),
     ],
