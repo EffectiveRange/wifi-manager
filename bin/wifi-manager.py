@@ -287,7 +287,6 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument(
         "--wlan-disable-power-save",
         help="disable wlan power save mode",
-        type=bool,
         action="store_true",
         default=False,
     )
