@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="wifi-manager",
-    version='1.5.6',
+    version='1.5.7',
     description="Wi-Fi manager application",
     long_description="Switching to AP mode if unable to connect to any configured network as a client",
     author="Ferenc Nandor Janky & Attila Gombos",
