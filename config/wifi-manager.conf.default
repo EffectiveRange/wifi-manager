@@ -13,6 +13,10 @@ device_hostname = er-{{device_role}}-{{cpu_serial}}
 wlan_interface = wlan0
 wlan_country = HU
 
+[control]
+control_switch_fail_limit = 5
+control_switch_fail_command = reboot
+
 [client]
 client_timeout = 15
 
