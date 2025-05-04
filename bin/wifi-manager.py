@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: MIT
 
 import pathlib
+
 import gi
 
 from wifi_connection import (
@@ -88,6 +89,8 @@ def main() -> None:
         device_hostname = config.get("device_hostname", "er-{{device_role}}-{{cpu_serial}}")
         wlan_interface = config.get("wlan_interface", "wlan0")
         wlan_country = config.get("wlan_country", "HU")
+        disable_power_save = config.get("wlan_disable_power_save", False)
+        disable_roaming = config.get("wlan_disable_roaming", False)
         switch_fail_limit = int(config.get("control_switch_fail_limit", 5))
         switch_fail_command = config.get("control_switch_fail_command", "reboot")
         client_timeout = int(config.get("client_timeout", 15))
@@ -102,21 +105,16 @@ def main() -> None:
         connection_restore_actions = config.get(
             "connection_restore_actions", "reset-wireless"
         ).split("\n")
-        disable_power_save = config.get("wlan_disable_power_save", False)
     except KeyError as error:
         raise ValueError(f"Missing configuration key: {error}")
 
     platform = PlatformAccess()
-    debian_12_or_higher = platform.get_platform_version() >= 12.0
-    platform_config = PlatformConfig(
-        "/boot/firmware/config.txt" if debian_12_or_higher else "/boot/config.txt"
-    )
-
     wlan_interface = WlanInterfaceSelector(platform).select(wlan_interface)
-    if disable_power_save:
-        platform.disable_wlan_power_save(wlan_interface)
+    debian_12_or_higher = platform.get_platform_version() >= 12.0
+    platform_config = PlatformConfig(platform, wlan_interface,
+                                     "/boot/firmware/config.txt" if debian_12_or_higher else "/boot/config.txt")
 
-    if platform_config.setup():
+    if platform_config.setup(disable_power_save, disable_roaming):
         log.warning("Platform configuration changed, reboot to apply changes")
 
     cpu_serial = platform.get_cpu_serial()
@@ -274,6 +272,10 @@ def _get_arguments() -> dict[str, Any]:
 
     parser.add_argument("--wlan-interface", help="preferred wlan interface")
     parser.add_argument("--wlan-country", help="country code")
+    parser.add_argument("--wlan-disable-power-save", help="disable wlan power save mode",
+                        action="store_true", default=False)
+    parser.add_argument("--wlan-disable-roaming", help="disable wifi roaming",
+                        action="store_true", default=False)
 
     parser.add_argument("--control-switch-fail-limit", help="mode switching failure limit", type=int)
     parser.add_argument("--control-switch-fail-command", help="command to execute when reaching failure limit")
@@ -289,13 +291,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument(
         "--hotspot-startup-delay", help="hotspot startup delay in seconds", type=int
     )
-    parser.add_argument("--disable-")
-    parser.add_argument(
-        "--wlan-disable-power-save",
-        help="disable wlan power save mode",
-        action="store_true",
-        default=False,
-    )
+
     args = parser.parse_args()
     if (
             args.config_file == default_config
