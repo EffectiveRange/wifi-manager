@@ -37,7 +37,7 @@ from wifi_manager import (
     WifiEventHandler,
     WebServerConfig,
     WifiWebServer,
-    WifiManager,
+    WifiManager, WifiControlConfig,
 )
 from wifi_service import (
     WpaSupplicantService,
@@ -83,16 +83,18 @@ def main() -> None:
     log.info("Retrieved configuration", configuration=config)
 
     try:
-        api_server_port = int(config["api_server_port"])
-        device_role = config["device_role"]
-        device_hostname = config["device_hostname"]
-        wlan_interface = config["wlan_interface"]
-        wlan_country = config["wlan_country"]
-        client_timeout = int(config["client_timeout"])
-        hotspot_password = config["hotspot_password"]
-        hotspot_peer_timeout = int(config["hotspot_peer_timeout"])
-        hotspot_static_ip = config["hotspot_static_ip"]
-        hotspot_dhcp_range = config["hotspot_dhcp_range"]
+        api_server_port = int(config.get("api_server_port", 8080))
+        device_role = config.get("device_role", "edge")
+        device_hostname = config.get("device_hostname", "er-{{device_role}}-{{cpu_serial}}")
+        wlan_interface = config.get("wlan_interface", "wlan0")
+        wlan_country = config.get("wlan_country", "HU")
+        switch_fail_limit = int(config.get("control_switch_fail_limit", 5))
+        switch_fail_command = config.get("control_switch_fail_command", "reboot")
+        client_timeout = int(config.get("client_timeout", 15))
+        hotspot_password = config.get("hotspot_password", "p4ssw0rd")
+        hotspot_peer_timeout = int(config.get("hotspot_peer_timeout", 120))
+        hotspot_static_ip = config.get("hotspot_static_ip", "192.168.100.1")
+        hotspot_dhcp_range = config.get("hotspot_dhcp_range", "192.168.100.2,192.168.100.254,255.255.255.0,2m")
         hotspot_startup_delay = int(config.get("hotspot_startup_delay", 5))
         connection_ping_interval = int(config.get("connection_ping_interval", 60))
         connection_ping_timeout = int(config.get("connection_ping_timeout", 5))
@@ -210,7 +212,8 @@ def main() -> None:
         connection_monitor = ConnectionMonitor(
             platform, connection_monitor_timer, connection_monitor_config
         )
-        wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
+        wifi_control_config = WifiControlConfig(switch_fail_limit, switch_fail_command)
+        wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, wifi_control_config)
         event_handler_timer = ReusableTimer()
         event_handler = WifiEventHandler(
             wifi_control,
@@ -272,6 +275,9 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument("--wlan-interface", help="preferred wlan interface")
     parser.add_argument("--wlan-country", help="country code")
 
+    parser.add_argument("--control-switch-fail-limit", help="mode switching failure limit", type=int)
+    parser.add_argument("--control-switch-fail-command", help="command to execute when reaching failure limit")
+
     parser.add_argument("--client-timeout", help="client timeout in seconds", type=int)
 
     parser.add_argument("--hotspot-password", help="hotspot Wi-Fi password")
@@ -292,8 +298,8 @@ def _get_arguments() -> dict[str, Any]:
     )
     args = parser.parse_args()
     if (
-        args.config_file == default_config
-        and not pathlib.Path(args.config_file).exists()
+            args.config_file == default_config
+            and not pathlib.Path(args.config_file).exists()
     ):
         def_config = (
             f"/etc/effective-range/{APPLICATION_NAME}/{APPLICATION_NAME}.conf.default"
@@ -314,10 +320,10 @@ def _update_logging(arguments: dict[str, Any], configuration: dict[str, Any]) ->
 
 
 def _init_service(
-    services: list[IService],
-    service: IService,
-    is_required: bool,
-    is_managed: bool = True,
+        services: list[IService],
+        service: IService,
+        is_required: bool,
+        is_managed: bool = True,
 ) -> None:
     if service.is_installed():
         if is_required:

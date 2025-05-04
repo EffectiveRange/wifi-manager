@@ -2,6 +2,7 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional
 
@@ -10,6 +11,7 @@ from context_logger import get_logger
 from wifi_config import WifiNetwork
 from wifi_event import WifiEventType
 from wifi_service import WifiClientService, WifiHotspotService, IService
+from wifi_utility import IPlatformAccess
 
 log = get_logger('WifiControl')
 
@@ -22,6 +24,12 @@ class WifiControlState(Enum):
 
     def __repr__(self) -> str:
         return self.value
+
+
+@dataclass
+class WifiControlConfig:
+    switch_fail_limit: int
+    switch_fail_command: str
 
 
 class IWifiControl(object):
@@ -62,9 +70,13 @@ class IWifiControl(object):
 
 class WifiControl(IWifiControl):
 
-    def __init__(self, client_service: WifiClientService, hotspot_service: WifiHotspotService) -> None:
+    def __init__(self, client_service: WifiClientService, hotspot_service: WifiHotspotService,
+                 platform: IPlatformAccess, config: WifiControlConfig) -> None:
         self._client_service = client_service
         self._hotspot_service = hotspot_service
+        self._platform = platform
+        self._config = config
+        self._failures = 0
 
         self._event_sources: dict[WifiEventType, IService] = {}
 
@@ -83,22 +95,30 @@ class WifiControl(IWifiControl):
     def start_client_mode(self) -> None:
         log.info('Starting client mode')
 
-        if self._hotspot_service.is_active():
-            self._hotspot_service.stop()
-        if self._client_service.is_active():
-            self._client_service.restart()
-        else:
-            self._client_service.start()
+        try:
+            if self._hotspot_service.is_active():
+                self._hotspot_service.stop()
+            if self._client_service.is_active():
+                self._client_service.restart()
+            else:
+                self._client_service.start()
+            self._failures = 0
+        except Exception as error:
+            self._handle_failure(error)
 
     def start_hotspot_mode(self) -> None:
         log.info('Starting hotspot mode')
 
-        if self._client_service.is_active():
-            self._client_service.stop()
-        if self._hotspot_service.is_active():
-            self._hotspot_service.restart()
-        else:
-            self._hotspot_service.start()
+        try:
+            if self._client_service.is_active():
+                self._client_service.stop()
+            if self._hotspot_service.is_active():
+                self._hotspot_service.restart()
+            else:
+                self._hotspot_service.start()
+            self._failures = 0
+        except Exception as error:
+            self._handle_failure(error)
 
     def get_ip_address(self) -> str:
         state = self.get_state()
@@ -155,3 +175,16 @@ class WifiControl(IWifiControl):
 
     def is_hotspot_ip_set(self) -> bool:
         return self.get_ip_address() == self._hotspot_service.get_hotspot_ip()
+
+    def _handle_failure(self, error: Exception) -> None:
+        self._failures = self._failures + 1
+
+        log.error('Failed to switch mode', error=error)
+
+        if self._failures >= self._config.switch_fail_limit:
+            log.error('Switching modes failure limit reached, executing command',
+                      limit=self._config.switch_fail_limit, command=self._config.switch_fail_command)
+            self._platform.execute_command(self._config.switch_fail_command)
+            self._failures = 0
+        else:
+            raise error

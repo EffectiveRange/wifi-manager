@@ -16,7 +16,7 @@ from wifi_config import WpaSupplicantConfig
 from wifi_connection import ConnectionRestoreAction, ConnectionMonitorConfig, ConnectionMonitor
 from wifi_dbus import WpaSupplicantDbus
 from wifi_event import WifiEventType
-from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl
+from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl, WifiControlConfig
 from wifi_service import (
     DnsmasqConfig,
     HostapdConfig,
@@ -313,7 +313,8 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
         ['reset-wireless', 'restart-service openvpn@*.service'], wifi_client_service, systemd, platform)
     connection_monitor_config = ConnectionMonitorConfig(60, 5, 3, list(restore_actions))
     connection_monitor = ConnectionMonitor(platform, MagicMock(spec=IReusableTimer), connection_monitor_config)
-    wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service)
+    control_config = WifiControlConfig(3, "reboot")
+    wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, control_config)
     event_handler = WifiEventHandler(wifi_control, timer, connection_monitor, 15, 120)
     web_server_config = WebServerConfig(hotspot_ip, server_port, RESOURCE_ROOT)
     web_server = WifiWebServer(web_server_config, platform, event_handler)

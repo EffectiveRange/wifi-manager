@@ -17,3 +17,4 @@ jobs:
     uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@v5
     with:
       package-type: 'wheel, dh-virtualenv'
+      package-architecture: '["armhf", "arm64"]'
