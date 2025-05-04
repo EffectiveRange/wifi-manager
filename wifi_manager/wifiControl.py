@@ -182,8 +182,8 @@ class WifiControl(IWifiControl):
         log.error('Failed to switch mode', error=error)
 
         if self._failures >= self._config.switch_fail_limit:
-            log.error('Switching modes failure limit reached, taking action',
-                      limit=self._config.switch_fail_limit, action=self._config.switch_fail_command)
+            log.error('Switching modes failure limit reached, executing command',
+                      limit=self._config.switch_fail_limit, command=self._config.switch_fail_command)
             self._platform.execute_command(self._config.switch_fail_command)
             self._failures = 0
         else:
