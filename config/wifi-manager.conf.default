@@ -12,6 +12,8 @@ device_hostname = er-{{device_role}}-{{cpu_serial}}
 [wlan]
 wlan_interface = wlan0
 wlan_country = HU
+wlan_disable_power_save = False
+wlan_disable_roaming = False
 
 [control]
 control_switch_fail_limit = 5

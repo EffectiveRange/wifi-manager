@@ -24,7 +24,7 @@ class IPlatformAccess(object):
     def get_wlan_interfaces(self) -> list[str]:
         raise NotImplementedError()
 
-    def disable_wlan_power_save(self, interface: str) -> None:
+    def set_wlan_power_save(self, interface: str, enable: bool) -> None:
         raise NotImplementedError()
 
     def get_hostname(self) -> str:
@@ -73,8 +73,9 @@ class PlatformAccess(IPlatformAccess):
     def get_wlan_interfaces(self) -> list[str]:
         return [interface for interface in netifaces.interfaces() if interface.startswith('wl')]
 
-    def disable_wlan_power_save(self, interface: str) -> None:
-        self.execute_command(f'iw dev {interface} set power_save off')
+    def set_wlan_power_save(self, interface: str, enable: bool) -> None:
+        value = 'on' if enable else 'off'
+        self.execute_command(f'iw dev {interface} set power_save {value}')
 
     def get_hostname(self) -> str:
         return socket.gethostname()
