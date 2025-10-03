@@ -92,6 +92,7 @@ def main() -> None:
         switch_fail_limit = int(config.get("control_switch_fail_limit", 5))
         switch_fail_command = config.get("control_switch_fail_command", "reboot")
         client_timeout = int(config.get("client_timeout", 15))
+        client_restart_delay = int(config.get("client_restart_delay", 5))
         hotspot_password = config.get("hotspot_password", "p4ssw0rd")
         hotspot_peer_timeout = int(config.get("hotspot_peer_timeout", 120))
         hotspot_static_ip = config.get("hotspot_static_ip", "192.168.100.1")
@@ -157,7 +158,7 @@ def main() -> None:
         dhcpcd_service = DhcpcdService(service_dependencies, system_bus, wlan_interface)
         avahi_service = AvahiService(service_dependencies, hostname)
         network_manager_service = NetworkManagerService(
-            service_dependencies, nm_config, nm_dbus
+            service_dependencies, nm_config, nm_dbus, client_restart_delay
         )
         dnsmasq_service = DnsmasqService(
             service_dependencies, system_bus, dnsmasq_config, resource_root
@@ -279,6 +280,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument("--control-switch-fail-command", help="command to execute when reaching failure limit")
 
     parser.add_argument("--client-timeout", help="client timeout in seconds", type=int)
+    parser.add_argument("--client-restart-delay", help="client restart delay in seconds", type=int)
 
     parser.add_argument("--hotspot-password", help="hotspot Wi-Fi password")
     parser.add_argument(

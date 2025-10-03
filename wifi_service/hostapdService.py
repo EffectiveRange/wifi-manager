@@ -76,8 +76,8 @@ class HostapdService(WifiHotspotService):
         return self._dhcp_server.get_static_ip()
 
     def _prepare_start(self) -> None:
-        self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
         time.sleep(self._config.startup_delay)
+        self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
 
     def _need_config_setup(self) -> bool:
         expected_config = self._configuration.splitlines()

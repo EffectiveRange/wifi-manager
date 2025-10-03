@@ -20,7 +20,8 @@ control_switch_fail_limit = 5
 control_switch_fail_command = reboot
 
 [client]
-client_timeout = 15
+client_timeout = 30
+client_restart_delay = 5
 
 [hotspot]
 hotspot_password = p4ssw0rd

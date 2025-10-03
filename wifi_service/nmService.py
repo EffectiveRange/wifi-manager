@@ -2,6 +2,8 @@
 # SPDX-FileCopyrightText: 2024 Attila Gombos <attila.gombos@effective-range.com>
 # SPDX-License-Identifier: MIT
 
+import time
+
 import gi
 
 from wifi_config import IWifiConfig, WifiNetwork
@@ -50,11 +52,13 @@ class NetworkManagerEvent(Enum):
 class NetworkManagerService(WifiClientService):
     _SYSTEMD_DBUS_PATH = '/org/freedesktop/systemd1/unit/NetworkManager_2eservice'
 
-    def __init__(self, dependencies: ServiceDependencies, wifi_config: IWifiConfig, wifi_dbus: IWifiDbus) -> None:
+    def __init__(self, dependencies: ServiceDependencies, wifi_config: IWifiConfig, wifi_dbus: IWifiDbus,
+                 restart_delay: int) -> None:
         super().__init__('NetworkManager', self._SYSTEMD_DBUS_PATH, dependencies)
         self._wifi_config = wifi_config
         self._wifi_dbus = wifi_dbus
         self._interface = wifi_dbus.get_interface()
+        self._restart_delay = restart_delay
 
     def get_supported_events(self) -> set[WifiEventType]:
         network_manager_events = {event.value for event in NetworkManagerEvent}
@@ -78,6 +82,11 @@ class NetworkManagerService(WifiClientService):
 
     def reset_wireless(self) -> None:
         self._wifi_dbus.reset_wireless()
+
+    def restart(self) -> None:
+        self.stop()
+        time.sleep(self._restart_delay)
+        self.start()
 
     def _complete_start(self) -> None:
         self._wifi_dbus.add_connection_handler(self._on_connection_changed)
