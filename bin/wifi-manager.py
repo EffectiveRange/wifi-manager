@@ -75,9 +75,7 @@ def main() -> None:
 
     log.info(f"Started {APPLICATION_NAME}", arguments=arguments)
 
-    config = ConfigLoader(
-        resource_root, f"config/{APPLICATION_NAME}.conf.default"
-    ).load(arguments)
+    config = ConfigLoader(Path(f"{resource_root}/config/{APPLICATION_NAME}.conf.default")).load(arguments)
 
     _update_logging(arguments, config)
 
@@ -310,8 +308,8 @@ def _get_resource_root() -> str:
 
 def _update_logging(arguments: dict[str, Any], configuration: dict[str, Any]) -> None:
     log_level = configuration.get("log_level", "INFO")
-    log_file = configuration["log_file"]
-    if log_level != "INFO" or log_file != arguments["log_file"]:
+    log_file = configuration.get("log_file")
+    if log_level != "INFO" or log_file != arguments.get("log_file"):
         setup_logging(APPLICATION_NAME, log_level, log_file, warn_on_overwrite=False)
 
 

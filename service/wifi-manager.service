@@ -9,7 +9,7 @@ StartLimitAction=reboot-force
 Type=simple
 Restart=always
 RestartSec=30
-ExecStart=/opt/venvs/wifi-manager/bin/python3 /opt/venvs/wifi-manager/bin/wifi-manager.py
+ExecStart=/opt/effective-range/venvs/wifi-manager/bin/python3 /opt/effective-range/venvs/wifi-manager/bin/wifi-manager.py
 
 [Install]
 WantedBy=multi-user.target

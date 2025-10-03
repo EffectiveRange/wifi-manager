@@ -4,6 +4,7 @@
 
 import functools
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 from common_utility import render_template_file, is_file_contains_lines, create_file
@@ -60,7 +61,7 @@ class DnsmasqService(DhcpServerService):
         self._system_bus = system_bus
         self._config_file = config_file
         self._config = config
-        self._config_file_content = render_template_file(resource_root, template_file, config.to_dict())
+        self._config_file_content = render_template_file(Path(resource_root, template_file), config.to_dict())
 
     def get_supported_events(self) -> set[WifiEventType]:
         return {event.value for event in DnsmasqPeerEvent}
