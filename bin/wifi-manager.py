@@ -75,9 +75,7 @@ def main() -> None:
 
     log.info(f"Started {APPLICATION_NAME}", arguments=arguments)
 
-    config = ConfigLoader(
-        resource_root, f"config/{APPLICATION_NAME}.conf.default"
-    ).load(arguments)
+    config = ConfigLoader(Path(f"{resource_root}/config/{APPLICATION_NAME}.conf.default")).load(arguments)
 
     _update_logging(arguments, config)
 
@@ -94,6 +92,7 @@ def main() -> None:
         switch_fail_limit = int(config.get("control_switch_fail_limit", 5))
         switch_fail_command = config.get("control_switch_fail_command", "reboot")
         client_timeout = int(config.get("client_timeout", 15))
+        client_restart_delay = int(config.get("client_restart_delay", 5))
         hotspot_password = config.get("hotspot_password", "p4ssw0rd")
         hotspot_peer_timeout = int(config.get("hotspot_peer_timeout", 120))
         hotspot_static_ip = config.get("hotspot_static_ip", "192.168.100.1")
@@ -159,7 +158,7 @@ def main() -> None:
         dhcpcd_service = DhcpcdService(service_dependencies, system_bus, wlan_interface)
         avahi_service = AvahiService(service_dependencies, hostname)
         network_manager_service = NetworkManagerService(
-            service_dependencies, nm_config, nm_dbus
+            service_dependencies, nm_config, nm_dbus, client_restart_delay
         )
         dnsmasq_service = DnsmasqService(
             service_dependencies, system_bus, dnsmasq_config, resource_root
@@ -281,6 +280,7 @@ def _get_arguments() -> dict[str, Any]:
     parser.add_argument("--control-switch-fail-command", help="command to execute when reaching failure limit")
 
     parser.add_argument("--client-timeout", help="client timeout in seconds", type=int)
+    parser.add_argument("--client-restart-delay", help="client restart delay in seconds", type=int)
 
     parser.add_argument("--hotspot-password", help="hotspot Wi-Fi password")
     parser.add_argument(
@@ -310,8 +310,8 @@ def _get_resource_root() -> str:
 
 def _update_logging(arguments: dict[str, Any], configuration: dict[str, Any]) -> None:
     log_level = configuration.get("log_level", "INFO")
-    log_file = configuration["log_file"]
-    if log_level != "INFO" or log_file != arguments["log_file"]:
+    log_file = configuration.get("log_file")
+    if log_level != "INFO" or log_file != arguments.get("log_file"):
         setup_logging(APPLICATION_NAME, log_level, log_file, warn_on_overwrite=False)
 
 

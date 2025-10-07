@@ -24,7 +24,7 @@ class NetworkManagerServiceTest(TestCase):
     def test_returns_supported_events(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         result = network_manager_service.get_supported_events()
@@ -50,7 +50,7 @@ class NetworkManagerServiceTest(TestCase):
     def test_returns_interface(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         result = network_manager_service.get_interface()
@@ -62,7 +62,7 @@ class NetworkManagerServiceTest(TestCase):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
         wifi_dbus.get_active_ssid.return_value = 'test-network'
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         result = network_manager_service.get_connected_ssid()
@@ -77,7 +77,7 @@ class NetworkManagerServiceTest(TestCase):
             WifiNetwork('"test-network1"', '"test-password1"', True, 0),
             WifiNetwork('test-network2', 'test-password2', False, 1)
         ]
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         result = network_manager_service.get_network_count()
@@ -93,7 +93,7 @@ class NetworkManagerServiceTest(TestCase):
             WifiNetwork('test-network2', 'test-password2', False, 1)
         ]
         wifi_config.get_networks.return_value = networks
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         result = network_manager_service.get_networks()
@@ -105,7 +105,7 @@ class NetworkManagerServiceTest(TestCase):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
         dependencies.systemd.is_active.return_value = True
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         network = WifiNetwork('test-network1', 'test-password1', True, 1)
 
@@ -118,7 +118,7 @@ class NetworkManagerServiceTest(TestCase):
     def test_resets_wireless(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         network_manager_service.reset_wireless()
@@ -126,10 +126,10 @@ class NetworkManagerServiceTest(TestCase):
         # Then
         wifi_dbus.reset_wireless.assert_called_once_with()
 
-    def test_executed_callback_on_connection_change_event(self):
+    def test_executes_callback_on_connection_change_event(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         callback_mock = MagicMock()
         network_manager_service.register_callback(WifiEventType.CLIENT_CONNECTED, callback_mock.handle_event)
@@ -143,7 +143,7 @@ class NetworkManagerServiceTest(TestCase):
     def test_adds_connection_handler_on_service_start(self):
         # Given
         dependencies, wifi_config, wifi_dbus = create_dependencies()
-        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus)
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
 
         # When
         network_manager_service.start()
@@ -153,6 +153,18 @@ class NetworkManagerServiceTest(TestCase):
             network_manager_service._on_connection_changed
         )
         wifi_dbus.enable_wireless.assert_called_once_with()
+
+    def test_stops_and_starts_on_service_restart(self):
+        # Given
+        dependencies, wifi_config, wifi_dbus = create_dependencies()
+        network_manager_service = NetworkManagerService(dependencies, wifi_config, wifi_dbus, 0)
+
+        # When
+        network_manager_service.restart()
+
+        # Then
+        dependencies.systemd.stop_service.assert_called_once_with('NetworkManager')
+        dependencies.systemd.start_service.assert_called_once_with('NetworkManager')
 
 
 def create_dependencies():

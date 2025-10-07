@@ -1,0 +1,68 @@
+{
+  "deps": [
+    {
+      "name": "git",
+      "hostinstall": true
+    },
+    {
+      "name": "dbus",
+      "hostinstall": true
+    },
+    {
+      "name": "libdbus-1-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "libdbus-glib-1-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "libgirepository1.0-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "libcairo2-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "libsystemd-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "libnm-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-gi",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-distutils",
+      "hostinstall": true
+    },
+    {
+      "name": "wpasupplicant",
+      "hostinstall": true
+    },
+    {
+      "name": "hostapd",
+      "hostinstall": true
+    },
+    {
+      "name": "dnsmasq",
+      "hostinstall": true
+    },
+    {
+      "name": "avahi-daemon",
+      "hostinstall": true
+    },
+    {
+      "name": "iptables",
+      "hostinstall": true
+    }
+  ]
+}

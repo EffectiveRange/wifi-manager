@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
+from pathlib import Path
 from typing import Any
 
 from common_utility import render_template_file, is_file_contains_lines, create_file
@@ -51,7 +52,7 @@ class HostapdService(WifiHotspotService):
         self._config_file = config_file
         self._config = config
         self._dhcp_server = dhcp_server
-        self._configuration = render_template_file(resource_root, template_file, config.to_dict())
+        self._configuration = render_template_file(Path(resource_root, template_file), config.to_dict())
         self.set_auto_start(False)
 
     def start(self) -> None:
@@ -75,8 +76,8 @@ class HostapdService(WifiHotspotService):
         return self._dhcp_server.get_static_ip()
 
     def _prepare_start(self) -> None:
-        self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
         time.sleep(self._config.startup_delay)
+        self._platform.set_ip_address(self._config.interface, self._dhcp_server.get_static_ip())
 
     def _need_config_setup(self) -> bool:
         expected_config = self._configuration.splitlines()

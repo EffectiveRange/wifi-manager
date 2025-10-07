@@ -1,3 +1,0 @@
-#!/bin/bash
-
-cp -vf /opt/venvs/wifi-manager/config/wifi-manager.conf.default /etc/effective-range/wifi-manager/wifi-manager.conf.default || true
