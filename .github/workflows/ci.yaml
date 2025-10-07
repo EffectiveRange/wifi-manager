@@ -17,4 +17,4 @@ jobs:
     uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@latest-python
     with:
       package-type: 'wheel, wheel-deb'
-      package-architecture: '["amd4"]'
+      package-architecture: '["amd64"]'
