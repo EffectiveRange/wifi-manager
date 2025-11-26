@@ -27,15 +27,15 @@ class BlinkControl(IBlinkControl):
 
     def blink(self) -> None:
         interval_micros = self._config.interval * 1_000_000
-        period = 1 / self._config.frequency
+        half_period = (1 / self._config.frequency) / 2
 
         for count in range(self._config.count):
-            self._blink(interval_micros, period)
+            self._blink(interval_micros, half_period)
 
             if count < self._config.count - 1:
                 sleep(self._config.pause)
 
-    def _blink(self, interval_micros: float, period: float) -> None:
+    def _blink(self, interval_micros: float, half_period: float) -> None:
         start_time = datetime.now()
 
         while True:
@@ -43,8 +43,8 @@ class BlinkControl(IBlinkControl):
             elapsed_micros = elapsed.total_seconds() * 1_000_000 + elapsed.microseconds
             if elapsed_micros < interval_micros:
                 self._device.on()
-                sleep(period / 2)
+                sleep(half_period)
                 self._device.off()
-                sleep(period / 2)
+                sleep(half_period)
             else:
                 break
