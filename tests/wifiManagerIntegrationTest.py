@@ -8,6 +8,7 @@ from common_utility import delete_directory, IReusableTimer, copy_file
 from context_logger import setup_logging
 from cysystemd.reader import JournalReader
 from dbus import SystemBus
+from gpiozero import DigitalOutputDevice
 from systemd_dbus import Systemd
 from test_utility import wait_for_assertion, wait_for_condition
 
@@ -28,7 +29,7 @@ from wifi_service import (
     HostapdService,
     IService,
 )
-from wifi_utility import IPlatformAccess, ServiceJournal
+from wifi_utility import IPlatformAccess, ServiceJournal, BlinkConfig, BlinkControl
 
 
 class WifiManagerIntegrationTest(TestCase):
@@ -315,7 +316,10 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
     connection_monitor = ConnectionMonitor(platform, MagicMock(spec=IReusableTimer), connection_monitor_config)
     control_config = WifiControlConfig(3, "reboot")
     wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, control_config)
-    event_handler = WifiEventHandler(wifi_control, timer, connection_monitor, 15, 120)
+    blink_config = BlinkConfig(500, 0, 0, 1)
+    blink_device = MagicMock(spec=DigitalOutputDevice)
+    blink_control = BlinkControl(blink_config, blink_device)
+    event_handler = WifiEventHandler(wifi_control, blink_control, timer, connection_monitor, 15, 120)
     web_server_config = WebServerConfig(hotspot_ip, server_port, RESOURCE_ROOT)
     web_server = WifiWebServer(web_server_config, platform, event_handler)
 

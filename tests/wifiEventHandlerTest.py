@@ -8,6 +8,7 @@ from wifi_config import WifiNetwork
 from wifi_connection import IConnectionMonitor
 from wifi_event import WifiEventType
 from wifi_manager import WifiEventHandler, IReusableTimer, IWifiControl, WifiControlState
+from wifi_utility import IBlinkControl
 
 
 class WifiEventHandlerTest(TestCase):
@@ -21,9 +22,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_wifi_monitor_callbacks_registered(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler.register_event_handlers()
@@ -44,9 +45,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_started_when_client_started(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_started(WifiEventType.CLIENT_STARTED, None)
@@ -56,9 +57,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_started_when_client_not_connected(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_not_connected(WifiEventType.CLIENT_SCANNING, None)
@@ -69,9 +70,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_hotspot_started_when_connecting_timed_out(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_connect_timeout()
@@ -81,10 +82,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_restarted_when_connecting_timed_out_and_failed_to_start_hotspot(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.start_hotspot_mode.side_effect = Exception('Failed to start hotspot')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_connect_timeout()
@@ -94,10 +95,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_stopped_when_client_connected(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.status = {'ssid': 'test-network', 'ip': '1.2.3.4', 'mac': '00:11:22:33:44:55'}
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_connected(WifiEventType.CLIENT_CONNECTED, {})
@@ -107,10 +108,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_monitor_started_when_client_ip_acquire(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.status = {'ssid': 'test-network', 'ip': '1.2.3.4', 'mac': '00:11:22:33:44:55'}
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_client_ip_acquired(WifiEventType.CLIENT_CONNECTED, {})
@@ -121,11 +122,11 @@ class WifiEventHandlerTest(TestCase):
     def test_timer_started_when_hotspot_started_and_there_are_configured_networks(self):
         # Given
         wifi_status = {'ssid': 'er-edge-12345678', 'ip': '192.168.100.1', 'mac': '00:11:22:33:44:55'}
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.get_status.return_value = wifi_status
         wifi_control.get_network_count.return_value = 3
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_hotspot_started(WifiEventType.HOTSPOT_STARTED, {})
@@ -137,11 +138,11 @@ class WifiEventHandlerTest(TestCase):
     def test_timer_not_started_when_hotspot_started_and_no_networks_configured(self):
         # Given
         wifi_status = {'ssid': 'er-edge-12345678', 'ip': '192.168.100.1', 'mac': '00:11:22:33:44:55'}
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.get_status.return_value = wifi_status
         wifi_control.get_network_count.return_value = 0
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_hotspot_started(WifiEventType.HOTSPOT_STARTED, {})
@@ -152,9 +153,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_stopped_when_peer_connected(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_connected(WifiEventType.HOTSPOT_PEER_CONNECTED,
@@ -165,9 +166,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_client_started_when_peer_connect_timed_out(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_connect_timeout()
@@ -177,10 +178,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_restarted_when_peer_connect_timed_out_and_failed_to_start_client(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.start_client_mode.side_effect = Exception('Failed to start client')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_connect_timeout()
@@ -190,9 +191,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_client_started_when_peer_disconnected(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks(WifiControlState.HOTSPOT)
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = (
+            create_mocks(WifiControlState.HOTSPOT))
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_disconnected(WifiEventType.HOTSPOT_PEER_DISCONNECTED,
@@ -203,9 +205,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_peer_disconnected_event_ignored_when_in_client_mode(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks(WifiControlState.CLIENT)
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = (
+            create_mocks(WifiControlState.CLIENT))
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_disconnected(WifiEventType.HOTSPOT_PEER_DISCONNECTED,
@@ -216,9 +219,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_peer_disconnected_event_ignored_when_no_networks_configured(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks(WifiControlState.CLIENT)
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = (
+            create_mocks(WifiControlState.CLIENT))
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_disconnected(WifiEventType.HOTSPOT_PEER_DISCONNECTED,
@@ -229,10 +233,11 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_restarted_when_peer_disconnected_and_failed_to_start_client(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks(WifiControlState.HOTSPOT)
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = (
+            create_mocks(WifiControlState.HOTSPOT))
         wifi_control.start_client_mode.side_effect = Exception('Failed to start client')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler._on_peer_disconnected(WifiEventType.HOTSPOT_PEER_DISCONNECTED,
@@ -243,10 +248,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_network_added_with_properties_enabled_and_priority(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.get_network_count.return_value = 3
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
         network = {'ssid': 'test-network', 'password': 'test-password'}
 
         # When
@@ -258,10 +263,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_network_add_request_rejected_when_password_length_is_too_short(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.get_network_count.return_value = 3
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
         network = {'ssid': 'test-network', 'password': 'short'}
 
         # When
@@ -273,11 +278,11 @@ class WifiEventHandlerTest(TestCase):
 
     def test_network_add_request_rejected_when_failed_to_add_network(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.get_network_count.return_value = 3
         wifi_control.add_network.side_effect = Exception('Failed to add network')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
         network = {'ssid': 'test-network', 'password': 'test-password'}
 
         # When
@@ -288,9 +293,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_client_started_when_adding_network_completed(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler.on_add_network_completed()
@@ -301,10 +306,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_restarted_when_adding_network_completed_but_failed_to_start_client(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.start_client_mode.side_effect = Exception('Failed to start client')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler.on_add_network_completed()
@@ -314,9 +319,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_returns_true_and_client_started_when_restart_client_requested(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         result = event_handler.on_restart_requested()
@@ -328,10 +333,10 @@ class WifiEventHandlerTest(TestCase):
 
     def test_returns_false_when_restart_client_requested_but_failed_to_start_client(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
         wifi_control.start_client_mode.side_effect = Exception('Failed to start client')
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         result = event_handler.on_restart_requested()
@@ -341,9 +346,9 @@ class WifiEventHandlerTest(TestCase):
 
     def test_timer_cancelled_when_shutdown_called(self):
         # Given
-        wifi_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
 
-        event_handler = WifiEventHandler(wifi_control, timer, monitor, client_timeout, peer_timeout)
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
 
         # When
         event_handler.shutdown()
@@ -352,14 +357,27 @@ class WifiEventHandlerTest(TestCase):
         timer.cancel.assert_called_once()
         monitor.stop.assert_called_once()
 
+    def test_blink_initiated_when_identify_requested(self):
+        # Given
+        wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout = create_mocks()
+
+        event_handler = WifiEventHandler(wifi_control, blink_control, timer, monitor, client_timeout, peer_timeout)
+
+        # When
+        event_handler.on_identify_requested()
+
+        # Then
+        blink_control.blink.assert_called_once()
+
 
 def create_mocks(wifi_state: WifiControlState = WifiControlState.CLIENT):
     client_timeout = 15
     peer_timeout = 120
     wifi_control = MagicMock(spec=IWifiControl)
     wifi_control.get_state.return_value = wifi_state
+    blink_control = MagicMock(spec=IBlinkControl)
     monitor = MagicMock(spec=IConnectionMonitor)
-    return wifi_control, MagicMock(spec=IReusableTimer), monitor, client_timeout, peer_timeout
+    return wifi_control, blink_control, MagicMock(spec=IReusableTimer), monitor, client_timeout, peer_timeout
 
 
 if __name__ == '__main__':

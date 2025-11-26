@@ -7,6 +7,7 @@
 import pathlib
 
 import gi
+from gpiozero import DigitalOutputDevice
 
 from wifi_connection import (
     ConnectionMonitorConfig,
@@ -14,6 +15,7 @@ from wifi_connection import (
     ConnectionRestoreAction,
 )
 from wifi_dbus import WpaSupplicantDbus, NetworkManagerDbus
+from wifi_utility.blinkControl import BlinkConfig, BlinkControl
 
 gi.require_version("NM", "1.0")
 import os
@@ -104,6 +106,13 @@ def main() -> None:
         connection_restore_actions = config.get(
             "connection_restore_actions", "reset-wireless"
         ).split("\n")
+        identify_pin_gpio_number = int(config.get("identify_pin_gpio_number", 12))
+        identify_pin_active_high = config.get("identify_pin_active_high", True)
+        identify_pin_initial_value = config.get("identify_pin_initial_value", False)
+        identify_blink_frequency = float(config.get("identify_blink_frequency", 440))
+        identify_blink_interval = float(config.get("identify_blink_interval", 0.5))
+        identify_blink_pause = float(config.get("identify_blink_pause", 0.5))
+        identify_blink_count = int(config.get("identify_blink_count", 3))
     except KeyError as error:
         raise ValueError(f"Missing configuration key: {error}")
 
@@ -211,9 +220,17 @@ def main() -> None:
         )
         wifi_control_config = WifiControlConfig(switch_fail_limit, switch_fail_command)
         wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, wifi_control_config)
+        blink_config = BlinkConfig(
+            identify_blink_frequency, identify_blink_interval, identify_blink_pause, identify_blink_count
+        )
+        blink_device = DigitalOutputDevice(
+            identify_pin_gpio_number, active_high=identify_pin_active_high, initial_value=identify_pin_initial_value
+        )
+        blink_control = BlinkControl(blink_config, blink_device)
         event_handler_timer = ReusableTimer()
         event_handler = WifiEventHandler(
             wifi_control,
+            blink_control,
             event_handler_timer,
             connection_monitor,
             client_timeout,

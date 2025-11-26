@@ -11,6 +11,7 @@ from wifi_config import WifiNetwork
 from wifi_connection import IConnectionMonitor
 from wifi_event import WifiEventType
 from wifi_manager import IWifiControl, WifiControlState
+from wifi_utility import IBlinkControl
 
 log = get_logger('WifiEventHandler')
 
@@ -41,12 +42,14 @@ class WifiEventHandler(IEventHandler):
     def __init__(
             self,
             wifi_control: IWifiControl,
+            blink_control: IBlinkControl,
             timer: IReusableTimer,
             connection_monitor: IConnectionMonitor,
             client_timeout: int,
             peer_timeout: int,
     ) -> None:
         self._wifi_control = wifi_control
+        self._blink_control = blink_control
         self._timer = timer
         self._connection_monitor = connection_monitor
         self._client_timeout = client_timeout
@@ -103,7 +106,7 @@ class WifiEventHandler(IEventHandler):
 
     def on_identify_requested(self) -> bool:
         log.info('Sending identification signal (Buzzer/LED)')
-        # TODO: implement
+        self._blink_control.blink()
         return True
 
     def shutdown(self) -> None:

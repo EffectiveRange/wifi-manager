@@ -37,3 +37,12 @@ connection_ping_fail_limit = 5
 connection_restore_actions =
     reset-wireless
     restart-service openvpn@*.service
+
+[identify]
+identify_pin_gpio_number = 12
+identify_pin_active_high = True
+identify_pin_initial_value = False
+identify_blink_frequency = 440
+identify_blink_interval = 0.5
+identify_blink_pause = 0.5
+identify_blink_count = 3
