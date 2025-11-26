@@ -44,6 +44,7 @@ setup(
         "jinja2",
         "cysystemd",
         "parameterized",
+        "gpiozero",
         "python-context-logger@git+https://github.com/EffectiveRange/python-context-logger.git@latest",
         "python-common-utility@git+https://github.com/EffectiveRange/python-common-utility.git@latest",
         "python-systemd-dbus@git+https://github.com/EffectiveRange/python-systemd-dbus.git@latest",
