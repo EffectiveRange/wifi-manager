@@ -38,7 +38,8 @@ from wifi_manager import (
     WifiEventHandler,
     WebServerConfig,
     WifiWebServer,
-    WifiManager, WifiControlConfig,
+    WifiManager,
+    WifiControlConfig,
 )
 from wifi_service import (
     WpaSupplicantService,
@@ -104,9 +105,7 @@ def main() -> None:
         connection_ping_interval = int(config.get("connection_ping_interval", 60))
         connection_ping_timeout = int(config.get("connection_ping_timeout", 5))
         connection_ping_fail_limit = int(config.get("connection_ping_fail_limit", 5))
-        connection_restore_actions = config.get(
-            "connection_restore_actions", "reset-wireless"
-        ).split("\n")
+        connection_restore_actions = config.get("connection_restore_actions", "reset-wireless").strip().split("\n")
         identify_pin_gpio_number = int(config.get("identify_pin_gpio_number", 12))
         identify_pin_active_high = config.get("identify_pin_active_high", True)
         identify_pin_initial_value = config.get("identify_pin_initial_value", False)
@@ -114,6 +113,7 @@ def main() -> None:
         identify_blink_interval = float(config.get("identify_blink_interval", 0.5))
         identify_blink_pause = float(config.get("identify_blink_pause", 0.5))
         identify_blink_count = int(config.get("identify_blink_count", 3))
+        command_definitions = config.get("command_definitions", "").strip().split("\n")
     except KeyError as error:
         raise ValueError(f"Missing configuration key: {error}")
 
@@ -240,7 +240,7 @@ def main() -> None:
         web_server_config = WebServerConfig(
             hotspot_static_ip, api_server_port, resource_root
         )
-        web_server = WifiWebServer(web_server_config, platform, event_handler)
+        web_server = WifiWebServer(web_server_config, platform, event_handler, command_definitions)
 
         wifi_manager = WifiManager(
             services, wifi_control, event_handler, connection_monitor, web_server
@@ -311,10 +311,7 @@ def _get_arguments() -> dict[str, Any]:
     )
 
     args = parser.parse_args()
-    if (
-            args.config_file == default_config
-            and not pathlib.Path(args.config_file).exists()
-    ):
+    if args.config_file == default_config and not pathlib.Path(args.config_file).exists():
         def_config = (
             f"/etc/effective-range/{APPLICATION_NAME}/{APPLICATION_NAME}.conf.default"
         )

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+    <title>Device operation</title>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="../static/style.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="menu-bar">
+    <ul>
+        <li><a href="/web/configuration">Configuration</a></li>
+        <li><a href="/web/operation">Operation</a></li>
+        <li><a href="/web/execution">Execution</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <form class="form">
+        <label id="hostname">Device: {{ hostname }}</label>
+    </form>
+    <form action="identify" class="form" method="post">
+        <button type="submit" value="Submit">Identify</button>
+        <label id="result">{{ identify_result }}</label>
+    </form>
+    <form action="restart" class="form" method="post">
+        <button type="submit" value="Submit">Restart</button>
+        <label id="result">{{ restart_result }}</label>
+    </form>
+</div>
+</body>
+</html>

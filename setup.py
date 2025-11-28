@@ -27,7 +27,7 @@ setup(
                 "config/dnsmasq.conf.template",
             ],
         ),
-        ("templates", ["templates/configure.html", "templates/identify.html"]),
+        ("templates", ["templates/configuration.html", "templates/operation.html", "templates/execution.html"]),
         ("static", ["static/style.css"]),
     ],
     use_scm_version=True,
