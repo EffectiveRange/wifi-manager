@@ -7,7 +7,6 @@
 import pathlib
 
 import gi
-from gpiozero import DigitalOutputDevice
 
 from wifi_connection import (
     ConnectionMonitorConfig,
@@ -15,7 +14,6 @@ from wifi_connection import (
     ConnectionRestoreAction,
 )
 from wifi_dbus import WpaSupplicantDbus, NetworkManagerDbus
-from wifi_utility.blinkControl import BlinkConfig, BlinkControl
 
 gi.require_version("NM", "1.0")
 import os
@@ -61,6 +59,9 @@ from wifi_utility import (
     WlanInterfaceSelector,
     ServiceJournal,
     PlatformConfig,
+    GpioBlinkDevice,
+    BlinkConfig,
+    BlinkControl,
 )
 from wifi_config import WpaSupplicantConfig, NetworkManagerConfig
 
@@ -223,7 +224,7 @@ def main() -> None:
         blink_config = BlinkConfig(
             identify_blink_frequency, identify_blink_interval, identify_blink_pause, identify_blink_count
         )
-        blink_device = DigitalOutputDevice(
+        blink_device = GpioBlinkDevice(
             identify_pin_gpio_number, active_high=identify_pin_active_high, initial_value=identify_pin_initial_value
         )
         blink_control = BlinkControl(blink_config, blink_device)

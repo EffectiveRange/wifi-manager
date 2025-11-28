@@ -2,7 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from time import sleep
 
-from gpiozero import DigitalOutputDevice
+from context_logger import get_logger
+
+from wifi_utility.blinkDevice import BlinkDevice
+
+log = get_logger('BlinkControl')
 
 
 @dataclass
@@ -21,7 +25,7 @@ class IBlinkControl:
 
 class BlinkControl(IBlinkControl):
 
-    def __init__(self, config: BlinkConfig, device: DigitalOutputDevice) -> None:
+    def __init__(self, config: BlinkConfig, device: BlinkDevice) -> None:
         self._config = config
         self._device = device
 
@@ -29,11 +33,18 @@ class BlinkControl(IBlinkControl):
         interval_micros = self._config.interval * 1_000_000
         half_period = (1 / self._config.frequency) / 2
 
-        for count in range(self._config.count):
-            self._blink(interval_micros, half_period)
+        try:
+            self._device.open()
 
-            if count < self._config.count - 1:
-                sleep(self._config.pause)
+            for count in range(self._config.count):
+                self._blink(interval_micros, half_period)
+
+                if count < self._config.count - 1:
+                    sleep(self._config.pause)
+        except Exception as error:
+            log.error(f"Blink device error: {error}")
+        finally:
+            self._device.close()
 
     def _blink(self, interval_micros: float, half_period: float) -> None:
         start_time = datetime.now()
