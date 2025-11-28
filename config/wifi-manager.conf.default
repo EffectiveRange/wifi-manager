@@ -46,3 +46,7 @@ identify_blink_frequency = 440
 identify_blink_interval = 0.5
 identify_blink_pause = 0.5
 identify_blink_count = 3
+
+[command]
+command_definitions =
+    Get current IP: ip addr show wlan0 | grep 'inet ' | awk '{print $2}'

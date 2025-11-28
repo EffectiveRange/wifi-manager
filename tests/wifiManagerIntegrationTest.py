@@ -321,7 +321,7 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
     blink_control = BlinkControl(blink_config, blink_device)
     event_handler = WifiEventHandler(wifi_control, blink_control, timer, connection_monitor, 15, 120)
     web_server_config = WebServerConfig(hotspot_ip, server_port, RESOURCE_ROOT)
-    web_server = WifiWebServer(web_server_config, platform, event_handler)
+    web_server = WifiWebServer(web_server_config, platform, event_handler, [])
 
     services: list[IService] = [
         dns_client_service,

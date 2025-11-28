@@ -1,4 +1,5 @@
 import unittest
+from subprocess import CalledProcessError
 from threading import Thread
 from unittest import TestCase
 from unittest.mock import MagicMock
@@ -25,7 +26,7 @@ class WifiWebServerTest(TestCase):
         configuration = create_configuration(server_port=8080)
         platform, event_handler = create_mocks()
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             # When
             Thread(target=web_server.run).start()
 
@@ -41,7 +42,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -60,7 +61,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -79,7 +80,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -96,7 +97,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_identify_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -113,7 +114,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_restart_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -130,7 +131,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_identify_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -147,7 +148,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_identify_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -158,28 +159,28 @@ class WifiWebServerTest(TestCase):
             event_handler.on_identify_requested.assert_called()
             self.assertEqual(400, response.status_code)
 
-    def test_returned_network_configuration_form(self):
+    def test_returned_configuration_form(self):
         # Given
         configuration = create_configuration()
         platform, event_handler = create_mocks()
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
             # When
-            response = client.get('/web/configure')
+            response = client.get('/web/configuration')
 
             # Then
             self.assertEqual(200, response.status_code)
-            self.assertIn('Configure Wi-Fi Network', response.text)
+            self.assertIn('Network configuration', response.text)
 
-    def test_redirect_to_network_configuration_form(self):
+    def test_redirect_to_configuration_form(self):
         # Given
         configuration = create_configuration()
         platform, event_handler = create_mocks()
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -188,23 +189,39 @@ class WifiWebServerTest(TestCase):
 
             # Then
             self.assertEqual(302, response.status_code)
-            self.assertIn('/web/configure', response.headers['Location'])
+            self.assertIn('/web/configuration', response.headers['Location'])
 
-    def test_returned_device_identification_form(self):
+    def test_returned_operation_form(self):
         # Given
         configuration = create_configuration()
         platform, event_handler = create_mocks()
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
             # When
-            response = client.get('/web/identify')
+            response = client.get('/web/operation')
 
             # Then
             self.assertEqual(200, response.status_code)
-            self.assertIn('Identify device', response.text)
+            self.assertIn('Device operation', response.text)
+
+    def test_returned_execution_form(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.get('/web/execution')
+
+            # Then
+            self.assertEqual(200, response.status_code)
+            self.assertIn('Command execution', response.text)
 
     def test_returned_success_when_configured_network_by_web(self):
         # Given
@@ -212,7 +229,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -231,7 +248,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -250,7 +267,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_add_network_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -267,7 +284,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_restart_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -284,7 +301,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_restart_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -301,7 +318,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_identify_requested.return_value = True
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -318,7 +335,7 @@ class WifiWebServerTest(TestCase):
         platform, event_handler = create_mocks()
         event_handler.on_identify_requested.return_value = False
 
-        with WifiWebServer(configuration, platform, event_handler) as web_server:
+        with WifiWebServer(configuration, platform, event_handler, []) as web_server:
             client = web_server._app.test_client()
             Thread(target=web_server.run).start()
 
@@ -328,6 +345,40 @@ class WifiWebServerTest(TestCase):
             # Then
             event_handler.on_identify_requested.assert_called()
             self.assertIn('Failed to send identification signal', response.text)
+
+    def test_command_execution(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        platform.execute_command.return_value = b'echo Hello'
+
+        with WifiWebServer(configuration, platform, event_handler, ["Say Hello: echo Hello"]) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/web/execute', data={'command': 'echo Hello'})
+
+            # Then
+            platform.execute_command.assert_called_with('echo Hello')
+            self.assertIn('Exit code: <span class="result">0</span>', response.text)
+
+    def test_command_execution_when_command_fails(self):
+        # Given
+        configuration = create_configuration()
+        platform, event_handler = create_mocks()
+        platform.execute_command.side_effect = CalledProcessError(1, 'abc', stderr=b'-bash: abc: command not found')
+
+        with WifiWebServer(configuration, platform, event_handler, [""]) as web_server:
+            client = web_server._app.test_client()
+            Thread(target=web_server.run).start()
+
+            # When
+            response = client.post('/web/execute', data={'command': 'abc'})
+
+            # Then
+            platform.execute_command.assert_called_with('abc')
+            self.assertIn('Exit code: <span class="result">1</span>', response.text)
 
 
 def create_configuration(hotspot_ip='192.168.100.1', server_port=0):

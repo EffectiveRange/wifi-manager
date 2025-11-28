@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+    <title>Command execution</title>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="../static/style.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="menu-bar">
+    <ul>
+        <li><a href="/web/configuration">Configuration</a></li>
+        <li><a href="/web/operation">Operation</a></li>
+        <li><a href="/web/execution">Execution</a></li>
+    </ul>
+</nav>
+<div class="container">
+    <form class="form">
+        <label id="hostname">Device: {{ hostname }}</label>
+    </form>
+    {% for command in commands %}
+        <form action="execute" class="form" method="post">
+            <input type="hidden" name="command" value="{{ command.value }}">
+            <button type="submit" value="Submit">{{ command.name }}</button>
+        </form>
+    {% endfor %}
+    <form action="execute" class="form" method="post">
+        <input type="text" name="command">
+        <button type="submit" value="Submit">Execute</button>
+    </form>
+    <form id="command-result" class="form">
+        Command:<br>
+        <span class="result">{{ command }}</span><br>
+        Output:<br>
+        <span class="result">{{ output }}</span><br>
+        Exit code: <span class="result">{{ code }}</span>
+    </form>
+</div>
+</body>
+</html>

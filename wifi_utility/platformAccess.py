@@ -111,7 +111,7 @@ class PlatformAccess(IPlatformAccess):
 
     def execute_command(self, command: str) -> bytes:
         try:
-            log.debug('Executing command', command=command)
+            log.info('Executing command', command=command)
             return subprocess.check_output(command, stderr=subprocess.PIPE, shell=True)
         except subprocess.CalledProcessError as error:
             log.error('Error executing command', command=command, error=error.stderr)
