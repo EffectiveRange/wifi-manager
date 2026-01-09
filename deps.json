@@ -60,13 +60,5 @@
       "name": "iptables",
       "hostinstall": true
     }
-  ],
-  "bookworm": {
-    "deps": [
-      {
-        "name": "python3-distutils",
-        "hostinstall": true
-      }
-    ]
-  }
+  ]
 }
