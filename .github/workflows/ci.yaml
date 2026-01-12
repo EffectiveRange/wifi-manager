@@ -17,4 +17,3 @@ jobs:
     uses: EffectiveRange/ci-workflows/.github/workflows/python-ci.yaml@latest-python
     with:
       package-type: 'wheel, wheel-deb'
-      package-architecture: '["all"]'
