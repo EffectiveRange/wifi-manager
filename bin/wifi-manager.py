@@ -11,7 +11,7 @@ import gi
 from wifi_connection import (
     ConnectionMonitorConfig,
     ConnectionMonitor,
-    ConnectionRestoreAction,
+    ConnectionAction,
 )
 from wifi_dbus import WpaSupplicantDbus, NetworkManagerDbus
 
@@ -105,6 +105,7 @@ def main() -> None:
         connection_ping_interval = int(config.get("connection_ping_interval", 60))
         connection_ping_timeout = int(config.get("connection_ping_timeout", 5))
         connection_ping_fail_limit = int(config.get("connection_ping_fail_limit", 5))
+        connection_connect_actions = config.get("connection_connect_actions", "").strip().split("\n")
         connection_restore_actions = config.get("connection_restore_actions", "reset-wireless").strip().split("\n")
         identify_pin_gpio_number = int(config.get("identify_pin_gpio_number", 12))
         identify_pin_active_high = config.get("identify_pin_active_high", True)
@@ -206,14 +207,18 @@ def main() -> None:
         )
 
         connection_monitor_timer = ReusableTimer()
-        restore_actions = ConnectionRestoreAction.create_actions(
+        connect_actions = ConnectionAction.create_actions(
+            connection_connect_actions, wifi_client_service, systemd, platform
+        )
+        restore_actions = ConnectionAction.create_actions(
             connection_restore_actions, wifi_client_service, systemd, platform
         )
         connection_monitor_config = ConnectionMonitorConfig(
             connection_ping_interval,
             connection_ping_timeout,
             connection_ping_fail_limit,
-            list(restore_actions),
+            list(connect_actions),
+            list(restore_actions)
         )
 
         connection_monitor = ConnectionMonitor(

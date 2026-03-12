@@ -15,8 +15,10 @@ from wifi_utility import IPlatformAccess, IJournal
 class AvahiServiceTest(TestCase):
     HOSTS_FILE = f'{TEST_FILE_SYSTEM_ROOT}/etc/hosts'
     HOSTNAME_FILE = f'{TEST_FILE_SYSTEM_ROOT}/etc/hostname'
+    CLOUD_CONFIG_FILE = f'{TEST_FILE_SYSTEM_ROOT}/etc/cloud/cloud.cfg'
     EXPECTED_HOSTS_FILE = f'{TEST_RESOURCE_ROOT}/expected/hosts'
     EXPECTED_HOSTNAME_FILE = f'{TEST_RESOURCE_ROOT}/expected/hostname'
+    EXPECTED_CLOUD_CONFIG_FILE = f'{TEST_RESOURCE_ROOT}/expected/cloud.cfg'
 
     @classmethod
     def setUpClass(cls):
@@ -26,6 +28,7 @@ class AvahiServiceTest(TestCase):
         print()
         copy_file(f'{TEST_RESOURCE_ROOT}/config/hosts', self.HOSTS_FILE)
         copy_file(f'{TEST_RESOURCE_ROOT}/config/hostname', self.HOSTNAME_FILE)
+        copy_file(f'{TEST_RESOURCE_ROOT}/config/cloud.cfg', self.CLOUD_CONFIG_FILE)
 
     def test_setup_updates_hosts_and_hostname_file_and_restarts_avahi_daemon(self):
         # Given
@@ -40,6 +43,7 @@ class AvahiServiceTest(TestCase):
         # Then
         self.assertTrue(compare_files(self.EXPECTED_HOSTS_FILE, self.HOSTS_FILE))
         self.assertTrue(compare_files(self.EXPECTED_HOSTNAME_FILE, self.HOSTNAME_FILE))
+        self.assertTrue(compare_files(self.CLOUD_CONFIG_FILE, self.CLOUD_CONFIG_FILE))
         dependencies.systemd.restart_service.assert_called_once_with('avahi-daemon')
 
     def test_setup_raises_service_error_when_fails_to_update_hostname(self):

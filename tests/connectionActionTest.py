@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from context_logger import setup_logging
 from systemd_dbus import Systemd
 
-from wifi_connection import ConnectionRestoreAction
+from wifi_connection import ConnectionAction
 from wifi_service import WifiClientService
 from wifi_utility import IPlatformAccess
 
@@ -22,7 +22,7 @@ class ConnectionRestoreTest(TestCase):
     def test_reset_wireless_action(self):
         # Given
         client, systemd, platform = create_dependencies()
-        action = ConnectionRestoreAction.create_actions(['reset-wireless'], client, systemd, platform)[0]
+        action = ConnectionAction.create_actions(['reset-wireless'], client, systemd, platform)[0]
 
         # When
         action.run()
@@ -34,7 +34,7 @@ class ConnectionRestoreTest(TestCase):
         # Given
         client, systemd, platform = create_dependencies()
         systemd.list_service_names.return_value = ['test1.service', 'test2.service']
-        action = ConnectionRestoreAction.create_actions(['restart-service test*.service'], client, systemd, platform)[0]
+        action = ConnectionAction.create_actions(['restart-service test*.service'], client, systemd, platform)[0]
 
         # When
         action.run()
@@ -49,7 +49,7 @@ class ConnectionRestoreTest(TestCase):
     def test_execute_command_action(self):
         # Given
         client, systemd, platform = create_dependencies()
-        action = ConnectionRestoreAction.create_actions(
+        action = ConnectionAction.create_actions(
             ['execute-command ifconfig wlan0 down && ifconfig wlan0 up'], client, systemd, platform)[0]
 
         # When

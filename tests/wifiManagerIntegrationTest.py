@@ -14,7 +14,7 @@ from test_utility import wait_for_assertion, wait_for_condition
 
 from tests import RESOURCE_ROOT, TEST_FILE_SYSTEM_ROOT, TEST_RESOURCE_ROOT
 from wifi_config import WpaSupplicantConfig
-from wifi_connection import ConnectionRestoreAction, ConnectionMonitorConfig, ConnectionMonitor
+from wifi_connection import ConnectionAction, ConnectionMonitorConfig, ConnectionMonitor
 from wifi_dbus import WpaSupplicantDbus
 from wifi_event import WifiEventType
 from wifi_manager import WifiManager, WifiEventHandler, WifiWebServer, WebServerConfig, WifiControl, WifiControlConfig
@@ -310,9 +310,11 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
     wifi_client_service._config_reloaded.set()
     wifi_hotspot_service._config_reloaded.set()
 
-    restore_actions = ConnectionRestoreAction.create_actions(
+    connect_actions = ConnectionAction.create_actions(['restart-service sshd.service'], wifi_client_service,
+                                                      systemd, platform)
+    restore_actions = ConnectionAction.create_actions(
         ['reset-wireless', 'restart-service openvpn@*.service'], wifi_client_service, systemd, platform)
-    connection_monitor_config = ConnectionMonitorConfig(60, 5, 3, list(restore_actions))
+    connection_monitor_config = ConnectionMonitorConfig(60, 5, 3, list(connect_actions), list(restore_actions))
     connection_monitor = ConnectionMonitor(platform, MagicMock(spec=IReusableTimer), connection_monitor_config)
     control_config = WifiControlConfig(3, "reboot")
     wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, control_config)

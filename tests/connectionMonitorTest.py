@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from common_utility import IReusableTimer
 from context_logger import setup_logging
 
-from wifi_connection import ConnectionMonitor, ConnectionMonitorConfig, ConnectionRestoreAction
+from wifi_connection import ConnectionMonitor, ConnectionMonitorConfig, ConnectionAction
 from wifi_utility import IPlatformAccess
 
 
@@ -21,6 +21,7 @@ class ConnectionMonitorTest(TestCase):
     def test_should_start_timer(self):
         # Given
         platform, timer, config = create_dependencies()
+        config.connect_actions = [MagicMock(spec=ConnectionAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -28,6 +29,21 @@ class ConnectionMonitorTest(TestCase):
 
         # Then
         timer.start.assert_called_once_with(60, connection_monitor._check_connection)
+        config.connect_actions[0].run.assert_not_called()
+
+    def test_should_start_timer_and_run_connect_actions(self):
+        # Given
+        platform, timer, config = create_dependencies()
+        config.connect_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
+        connection_monitor = ConnectionMonitor(platform, timer, config)
+
+        # When
+        connection_monitor.start(ip_acquired=True)
+
+        # Then
+        timer.start.assert_called_once_with(60, connection_monitor._check_connection)
+        config.connect_actions[0].run.assert_called_once()
+        config.connect_actions[1].run.assert_called_once()
 
     def test_should_cancel_timer(self):
         # Given
@@ -45,6 +61,7 @@ class ConnectionMonitorTest(TestCase):
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.return_value = True
         platform.ping_tunnel_endpoint.return_value = True
+        config.connect_actions = [MagicMock(spec=ConnectionAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -53,13 +70,15 @@ class ConnectionMonitorTest(TestCase):
         # Then
         platform.ping_default_gateway.assert_called_once_with(5)
         platform.ping_tunnel_endpoint.assert_called_once_with(5)
+        config.connect_actions[0].run.assert_not_called()
         timer.restart.assert_called_once()
 
-    def test_should_reset_failure_counter_when_ping_is_successful(self):
+    def test_should_reset_failure_counter_and_run_connect_actions_when_ping_is_successful(self):
         # Given
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.side_effect = [False, False, True]
         platform.ping_tunnel_endpoint.return_value = True
+        config.connect_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -71,13 +90,15 @@ class ConnectionMonitorTest(TestCase):
         platform.ping_default_gateway.assert_called_with(5)
         platform.ping_tunnel_endpoint.assert_called_once_with(5)
         self.assertEqual(0, connection_monitor._failures)
+        config.connect_actions[0].run.assert_called_once()
+        config.connect_actions[1].run.assert_called_once()
         timer.restart.assert_called()
 
     def test_should_run_connection_restore_actions_when_failed_to_ping_default_gateway(self):
         # Given
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.side_effect = [False, False, False]
-        config.restore_actions = [MagicMock(spec=ConnectionRestoreAction), MagicMock(spec=ConnectionRestoreAction)]
+        config.restore_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -97,7 +118,7 @@ class ConnectionMonitorTest(TestCase):
         platform, timer, config = create_dependencies()
         platform.ping_default_gateway.return_value = True
         platform.ping_tunnel_endpoint.side_effect = [False, False, False]
-        config.restore_actions = [MagicMock(spec=ConnectionRestoreAction), MagicMock(spec=ConnectionRestoreAction)]
+        config.restore_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
@@ -116,7 +137,7 @@ class ConnectionMonitorTest(TestCase):
 def create_dependencies():
     platform = MagicMock(spec=IPlatformAccess)
     timer = MagicMock(spec=IReusableTimer)
-    config = ConnectionMonitorConfig(60, 5, 3, [])
+    config = ConnectionMonitorConfig(60, 5, 3, [], [])
     return platform, timer, config
 
 

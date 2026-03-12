@@ -30,12 +30,12 @@ class ActionType(Enum):
         return None
 
 
-class ConnectionRestoreAction(object):
+class ConnectionAction(object):
 
     @classmethod
     def create_actions(cls, action_strings: list[str], client: WifiClientService, systemd: Systemd,
-                       platform: IPlatformAccess) -> list['ConnectionRestoreAction']:
-        actions: list[ConnectionRestoreAction] = []
+                       platform: IPlatformAccess) -> list['ConnectionAction']:
+        actions: list[ConnectionAction] = []
 
         for action_string in action_strings:
             action_parts = action_string.split(' ', 1)
@@ -59,7 +59,7 @@ class ConnectionRestoreAction(object):
         raise NotImplementedError()
 
 
-class ResetWirelessAction(ConnectionRestoreAction):
+class ResetWirelessAction(ConnectionAction):
 
     def __init__(self, client: WifiClientService) -> None:
         super().__init__(ActionType.RESET_WIRELESS)
@@ -70,7 +70,7 @@ class ResetWirelessAction(ConnectionRestoreAction):
         log.info('Reset wireless connection')
 
 
-class RestartServiceAction(ConnectionRestoreAction):
+class RestartServiceAction(ConnectionAction):
 
     def __init__(self, systemd: Systemd, service: str) -> None:
         super().__init__(ActionType.RESTART_SERVICE)
@@ -83,7 +83,7 @@ class RestartServiceAction(ConnectionRestoreAction):
             log.info('Restarted service', service=service)
 
 
-class ExecuteCommandAction(ConnectionRestoreAction):
+class ExecuteCommandAction(ConnectionAction):
 
     def __init__(self, platform: IPlatformAccess, command: str) -> None:
         super().__init__(ActionType.EXECUTE_COMMAND)

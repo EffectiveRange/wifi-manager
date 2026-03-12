@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from common_utility import IReusableTimer
 from context_logger import get_logger
 
-from wifi_connection import ConnectionRestoreAction
+from wifi_connection import ConnectionAction
 from wifi_utility import IPlatformAccess
 
 log = get_logger('ConnectionMonitor')
@@ -18,12 +18,13 @@ class ConnectionMonitorConfig:
     ping_interval: int
     ping_timeout: int
     ping_fail_limit: int
-    restore_actions: list[ConnectionRestoreAction]
+    connect_actions: list[ConnectionAction]
+    restore_actions: list[ConnectionAction]
 
 
 class IConnectionMonitor(object):
 
-    def start(self) -> None:
+    def start(self, ip_acquired: bool = False) -> None:
         raise NotImplementedError()
 
     def stop(self) -> None:
@@ -38,8 +39,13 @@ class ConnectionMonitor(IConnectionMonitor):
         self._config = config
         self._failures = 0
 
-    def start(self) -> None:
+    def start(self, ip_acquired: bool = False) -> None:
+        self._failures = 0
         self._timer.start(self._config.ping_interval, self._check_connection)
+
+        if ip_acquired:
+            log.info("Connection established, executing connect actions")
+            self._run_actions(self._config.connect_actions)
 
     def stop(self) -> None:
         self._timer.cancel()
@@ -47,7 +53,10 @@ class ConnectionMonitor(IConnectionMonitor):
     def _check_connection(self) -> None:
         if self._platform.ping_default_gateway(self._config.ping_timeout):
             if self._platform.ping_tunnel_endpoint(self._config.ping_timeout):
-                self._failures = 0
+                if self._failures > 0:
+                    self._failures = 0
+                    log.info("Connection restored, executing connect actions")
+                    self._run_actions(self._config.connect_actions)
             else:
                 self._failures += 1
                 log.warn("Ping to tunnel endpoint failed", failures=self._failures, timeout=self._config.ping_timeout)
@@ -60,7 +69,10 @@ class ConnectionMonitor(IConnectionMonitor):
             self._failures = 0
             log.error("Failed to reach default gateway or tunnel endpoint, executing restore actions")
 
-            for action in self._config.restore_actions:
-                action.run()
+            self._run_actions(self._config.restore_actions)
 
         self._timer.restart()
+
+    def _run_actions(self, actions: list[ConnectionAction]) -> None:
+        for action in actions:
+            action.run()
