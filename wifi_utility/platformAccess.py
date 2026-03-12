@@ -7,6 +7,7 @@ import socket
 import subprocess
 
 import netifaces
+from common_utility import InterfaceResolver, AddressFamily
 from context_logger import get_logger
 from ping3 import ping
 
@@ -63,6 +64,9 @@ class IPlatformAccess(object):
 
 class PlatformAccess(IPlatformAccess):
 
+    def __init__(self) -> None:
+        self._resolver = InterfaceResolver()
+
     def get_platform_version(self) -> float:
         with open('/etc/debian_version', 'r') as file:
             return float(file.read().strip())
@@ -85,10 +89,10 @@ class PlatformAccess(IPlatformAccess):
             return ''.join(file.readlines()).strip().strip('\x00')[-8:]
 
     def get_mac_address(self, interface: str) -> str:
-        return self._get_address(interface, netifaces.AF_LINK)
+        return self._resolver.resolve(interface, AddressFamily.MAC) or ''
 
     def get_ip_address(self, interface: str) -> str:
-        return self._get_address(interface, netifaces.AF_INET)
+        return self._resolver.resolve(interface, AddressFamily.IPv4) or ''
 
     def set_ip_address(self, interface: str, ip_address: str, netmask: str = '255.255.255.0') -> None:
         self.execute_command(f'ifconfig {interface} {ip_address} netmask {netmask}')
@@ -140,10 +144,3 @@ class PlatformAccess(IPlatformAccess):
                     return False
 
         return True
-
-    def _get_address(self, interface: str, address_family: int) -> str:
-        address = netifaces.ifaddresses(interface).get(address_family)
-        if address:
-            return str(address[0].get('addr', ''))
-        else:
-            return ''
