@@ -10,7 +10,7 @@
 | wifi\_config/wsConfig.py              |       80 |        0 |       24 |        2 |     98% |84->79, 100->exit |
 | wifi\_connection/\_\_init\_\_.py      |        2 |        0 |        0 |        0 |    100% |           |
 | wifi\_connection/connectionAction.py  |       60 |        1 |       16 |        3 |     95% |30, 45->40, 50->40 |
-| wifi\_connection/connectionMonitor.py |       44 |        0 |       12 |        0 |    100% |           |
+| wifi\_connection/connectionMonitor.py |       43 |        0 |       10 |        0 |    100% |           |
 | wifi\_dbus/\_\_init\_\_.py            |        3 |        0 |        0 |        0 |    100% |           |
 | wifi\_dbus/nmDbus.py                  |       71 |        0 |       14 |        2 |     98% |53->57, 94->exit |
 | wifi\_dbus/wifiDbus.py                |       21 |        0 |        0 |        0 |    100% |           |
@@ -20,7 +20,7 @@
 | wifi\_manager/wifiControl.py          |      112 |        0 |       30 |        0 |    100% |           |
 | wifi\_manager/wifiEventHandler.py     |      129 |        0 |        8 |        1 |     99% | 137->exit |
 | wifi\_manager/wifiManager.py          |       66 |        2 |       18 |        0 |     98% |     93-94 |
-| wifi\_manager/wifiWebServer.py        |      166 |        5 |       10 |        0 |     97% |99-101, 108-109 |
+| wifi\_manager/wifiWebServer.py        |      173 |        8 |       14 |        1 |     94% |78-81, 108-110, 117-118 |
 | wifi\_service/\_\_init\_\_.py         |        8 |        0 |        0 |        0 |    100% |           |
 | wifi\_service/avahiService.py         |       28 |        3 |        6 |        1 |     82% |     48-50 |
 | wifi\_service/dhcpcdService.py        |       36 |        0 |        4 |        2 |     95% |55->exit, 56->exit |
@@ -35,7 +35,7 @@
 | wifi\_utility/interfaceSelector.py    |       19 |        0 |        4 |        0 |    100% |           |
 | wifi\_utility/platformConfig.py       |       60 |        0 |       14 |        1 |     99% |  91->exit |
 | wifi\_utility/serviceJournal.py       |       46 |        0 |        6 |        1 |     98% |    62->67 |
-| **TOTAL**                             | **1588** |   **33** |  **248** |   **30** | **96%** |           |
+| **TOTAL**                             | **1594** |   **36** |  **250** |   **31** | **96%** |           |
 
 
 ## Setup coverage badge
