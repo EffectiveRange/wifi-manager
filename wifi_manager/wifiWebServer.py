@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from context_logger import get_logger
 from flask import Flask, render_template, request, json, redirect, Request, url_for
-from waitress.server import create_server
+from waitress.server import create_server, MultiSocketServer, BaseWSGIServer
 from werkzeug import Response
 
 from wifi_manager import IEventHandler
@@ -49,8 +49,9 @@ class WifiWebServer(IWebServer):
             template_folder=f'{self._configuration.resource_root}/templates',
             static_folder=f'{self._configuration.resource_root}/static',
         )
-        self._hotspot_host = f'{self._configuration.hotspot_ip}:{self._configuration.server_port}'
         self._server = create_server(self._app, listen=f'*:{self._configuration.server_port}')
+        self._server_port = self._get_effective_port(self._server)
+        self._hotspot_host = f'{self._configuration.hotspot_ip}:{self._server_port}'
         self._is_running = False
         self._network_configured = False
         self._hostname: Optional[str] = None
@@ -70,6 +71,14 @@ class WifiWebServer(IWebServer):
                 Thread(target=self._event_handler.on_add_network_completed).start()
 
             return response
+
+    def _get_effective_port(self, server: MultiSocketServer | BaseWSGIServer) -> int:
+        if isinstance(server, MultiSocketServer):
+            return int(server.effective_listen[0][1])
+        elif isinstance(server, BaseWSGIServer):
+            return int(server.getsockname()[1])
+        else:
+            return self._configuration.server_port
 
     def _get_commands(self, command_definitions: list[str]) -> list[dict[str, str]]:
         commands = []
@@ -91,7 +100,7 @@ class WifiWebServer(IWebServer):
         self.shutdown()
 
     def run(self) -> None:
-        log.info('Starting web server', port=self._configuration.server_port)
+        log.info('Starting web server', port=self._server_port)
         try:
             self._hostname = self._platform.get_hostname()
             self._is_running = True

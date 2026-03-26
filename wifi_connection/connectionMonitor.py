@@ -24,7 +24,7 @@ class ConnectionMonitorConfig:
 
 class IConnectionMonitor(object):
 
-    def start(self, ip_acquired: bool = False) -> None:
+    def start(self) -> None:
         raise NotImplementedError()
 
     def stop(self) -> None:
@@ -39,13 +39,12 @@ class ConnectionMonitor(IConnectionMonitor):
         self._config = config
         self._failures = 0
 
-    def start(self, ip_acquired: bool = False) -> None:
+    def start(self) -> None:
         self._failures = 0
         self._timer.start(self._config.ping_interval, self._check_connection)
 
-        if ip_acquired:
-            log.info("Connection established, executing connect actions")
-            self._run_actions(self._config.connect_actions)
+        log.info("Connection established, executing connect actions")
+        self._run_actions(self._config.connect_actions)
 
     def stop(self) -> None:
         self._timer.cancel()
