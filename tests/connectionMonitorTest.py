@@ -18,19 +18,6 @@ class ConnectionMonitorTest(TestCase):
     def setUp(self):
         print()
 
-    def test_should_start_timer(self):
-        # Given
-        platform, timer, config = create_dependencies()
-        config.connect_actions = [MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
-
-        # When
-        connection_monitor.start()
-
-        # Then
-        timer.start.assert_called_once_with(60, connection_monitor._check_connection)
-        config.connect_actions[0].run.assert_not_called()
-
     def test_should_start_timer_and_run_connect_actions(self):
         # Given
         platform, timer, config = create_dependencies()
@@ -38,7 +25,7 @@ class ConnectionMonitorTest(TestCase):
         connection_monitor = ConnectionMonitor(platform, timer, config)
 
         # When
-        connection_monitor.start(ip_acquired=True)
+        connection_monitor.start()
 
         # Then
         timer.start.assert_called_once_with(60, connection_monitor._check_connection)

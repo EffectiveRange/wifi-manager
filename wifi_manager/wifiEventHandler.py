@@ -167,7 +167,7 @@ class WifiEventHandler(IEventHandler):
         status = self._wifi_control.get_status()
         log.info('IP address acquired', wifi_mode=state, wifi_event=event_type, network=status)
 
-        self._connection_monitor.start(ip_acquired=True)
+        self._connection_monitor.start()
 
     def _on_hotspot_started(self, event_type: WifiEventType, data: Any) -> None:
         self._connection_monitor.stop()

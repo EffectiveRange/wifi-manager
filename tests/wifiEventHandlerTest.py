@@ -117,7 +117,7 @@ class WifiEventHandlerTest(TestCase):
         event_handler._on_client_ip_acquired(WifiEventType.CLIENT_CONNECTED, {})
 
         # Then
-        monitor.start.assert_called_once_with(ip_acquired=True)
+        monitor.start.assert_called_once_with()
 
     def test_timer_started_when_hotspot_started_and_there_are_configured_networks(self):
         # Given

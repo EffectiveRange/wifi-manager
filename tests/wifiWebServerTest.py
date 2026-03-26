@@ -23,7 +23,7 @@ class WifiWebServerTest(TestCase):
 
     def test_startup_and_shutdown(self):
         # Given
-        configuration = create_configuration(server_port=8080)
+        configuration = create_configuration()
         platform, event_handler = create_mocks()
 
         with WifiWebServer(configuration, platform, event_handler, []) as web_server:
@@ -32,7 +32,8 @@ class WifiWebServerTest(TestCase):
 
             # Then
             wait_for_assertion(1, platform.clean_up_ip_tables.assert_called_once)
-            wait_for_assertion(1, platform.set_up_ip_tables.assert_called_with, '192.168.100.1', '192.168.100.1:8080')
+            wait_for_assertion(1, platform.set_up_ip_tables.assert_called_with,
+                               '192.168.100.1', f'192.168.100.1:{web_server._server_port}')
 
         platform.clean_up_ip_tables.assert_called()
 
