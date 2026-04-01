@@ -68,7 +68,7 @@ class NetworkManagerConfigTest(TestCase):
         # Then
         self.assertEqual(2, len(result))
         self.assertIn(WifiNetwork('test-network1', 'test-password1', True, 0), result)
-        self.assertIn(WifiNetwork('test-network2', 'test-password2', False, 1), result)
+        self.assertIn(WifiNetwork('test-network2', '', False, 1), result)
 
     def test_get_networks_returns_empty_list_when_config_file_is_missing(self):
         # Given
@@ -103,6 +103,18 @@ class NetworkManagerConfigTest(TestCase):
         self.assertTrue(compare_files(
             self.get_expected_config_file('test-network1'),
             f'{self.NM_NETWORK_DIR}/test-network1.nmconnection', ['uuid = ']))
+
+    def test_add_network_updates_network_when_ssid_already_present_with_no_security(self):
+        # Given
+        nm_config = NetworkManagerConfig('wlan0', self.NM_CONFIG_FILE, self.NM_NETWORK_DIR)
+
+        # When
+        nm_config.add_network(WifiNetwork('test-network2', 'new-password2', False, 1))
+
+        # Then
+        self.assertTrue(compare_files(
+            self.get_expected_config_file('test-network2'),
+            f'{self.NM_NETWORK_DIR}/test-network2.nmconnection', ['uuid = ']))
 
     def test_remove_network_removes_network_by_ssid(self):
         # Given
