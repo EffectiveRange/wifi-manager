@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from context_logger import setup_logging
 from systemd_dbus import Systemd
 
-from wifi_connection import ConnectionAction
+from wifi_connection import ConnectionAction, RestartServiceAction
 from wifi_service import WifiClientService
 from wifi_utility import IPlatformAccess
 
@@ -31,6 +31,17 @@ class ConnectionRestoreTest(TestCase):
         client.reset_wireless.assert_called_once()
 
     def test_restart_service_action(self):
+        # Given
+        client, systemd, platform = create_dependencies()
+        action = RestartServiceAction(systemd, 'test1.service')
+
+        # When
+        action.run()
+
+        # Then
+        systemd.restart_service.assert_called_once_with('test1.service')
+
+    def test_restart_wildcard_service_action(self):
         # Given
         client, systemd, platform = create_dependencies()
         systemd.list_service_names.return_value = ['test1.service', 'test2.service']

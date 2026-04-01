@@ -15,7 +15,7 @@ log = get_logger('WifiManager')
 
 class WifiManager(object):
 
-    def __init__(self, services: list[IService], wifi_control: IWifiControl, event_handler: IEventHandler,
+    def __init__(self, services: dict[str, IService], wifi_control: IWifiControl, event_handler: IEventHandler,
                  connection_monitor: IConnectionMonitor, web_server: IWebServer) -> None:
         self._services = services
         self._wifi_control = wifi_control
@@ -47,14 +47,14 @@ class WifiManager(object):
         self._event_handler.shutdown()
 
     def _setup_services(self) -> None:
-        for service in self._services:
-            log.debug('Setting up service', service=service.get_name())
+        for name, service in self._services.items():
+            log.debug('Setting up service', service=name)
             service.setup()
 
     def _setup_event_handling(self) -> None:
-        for service in self._services:
+        for name, service in self._services.items():
             for event_type in service.get_supported_events():
-                log.debug('Registering event source', event_source=service.get_name(), event_type=event_type)
+                log.debug('Registering event source', event_source=name, event_type=event_type)
                 self._wifi_control.register_event_source(event_type, service)
 
         self._event_handler.register_event_handlers()

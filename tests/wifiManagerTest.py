@@ -40,7 +40,10 @@ class WifiManagerTest(TestCase):
         service1.get_name.return_value = 'service1'
         service2 = MagicMock(spec=IService)
         service2.get_name.return_value = 'service2'
-        services = [service1, service2]
+        services = {
+            service1.get_name(): service1,
+            service2.get_name(): service2
+        }
 
         with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             # When
@@ -58,7 +61,10 @@ class WifiManagerTest(TestCase):
         service1.setup.side_effect = ServiceError('service1', 'Setup failed')
         service2 = MagicMock(spec=IService)
         service2.get_name.return_value = 'service2'
-        services = [service1, service2]
+        services = {
+            service1.get_name(): service1,
+            service2.get_name(): service2
+        }
 
         wifi_manager = WifiManager(services, wifi_control, event_handler, monitor, web_server)
 
@@ -75,11 +81,13 @@ class WifiManagerTest(TestCase):
         service1 = MagicMock(spec=IService)
         service1.get_name.return_value = 'service1'
         service1.get_supported_events.return_value = [WifiEventType.CLIENT_CONNECTED, WifiEventType.CLIENT_DISCONNECTED]
-        services.append(service1)
         service2 = MagicMock(spec=IService)
         service2.get_name.return_value = 'service2'
         service2.get_supported_events.return_value = [WifiEventType.HOTSPOT_STARTED, WifiEventType.HOTSPOT_STOPPED]
-        services.append(service2)
+        services = {
+            service1.get_name(): service1,
+            service2.get_name(): service2
+        }
 
         with WifiManager(services, wifi_control, event_handler, monitor, web_server) as wifi_manager:
             # When
@@ -175,7 +183,7 @@ def create_mocks(wifi_state=WifiControlState.CLIENT, wifi_status=None):
     wifi_control.get_state.return_value = wifi_state
     wifi_control.get_status.return_value = wifi_status
     wifi_control.is_hotspot_ip_set.return_value = False
-    return [], wifi_control, MagicMock(spec=IEventHandler), MagicMock(spec=IConnectionMonitor), MagicMock(
+    return {}, wifi_control, MagicMock(spec=IEventHandler), MagicMock(spec=IConnectionMonitor), MagicMock(
         spec=IWebServer)
 
 

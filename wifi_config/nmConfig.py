@@ -59,6 +59,10 @@ class NetworkManagerConfig(IWifiConfig):
 
             config.set('wifi', 'ssid', ssid)
 
+            if not config.has_section('wifi-security'):
+                config.add_section('wifi-security')
+                config.set('wifi-security', 'key-mgmt', 'wpa-psk')
+
             config.set('wifi-security', 'psk', password)
         else:
             log.info('Creating new network configuration', ssid=ssid, file=file_name)
@@ -107,7 +111,7 @@ class NetworkManagerConfig(IWifiConfig):
         config.read(file_name)
 
         ssid = config.get('wifi', 'ssid')
-        password = config.get('wifi-security', 'psk', raw=True)
+        password = config.get('wifi-security', 'psk', raw=True, fallback='')
         enabled = config.get('connection', 'autoconnect', fallback='true') == 'true'
         priority = int(config.get('connection', 'autoconnect-priority', fallback='0'))
 

@@ -78,9 +78,13 @@ class RestartServiceAction(ConnectionAction):
         self._service = service
 
     def run(self) -> None:
-        for service in self._systemd.list_service_names(patterns=[self._service]):
-            self._systemd.restart_service(service)
-            log.info('Restarted service', service=service)
+        if '*' in self._service:
+            for service in self._systemd.list_service_names(patterns=[self._service]):
+                self._systemd.restart_service(service)
+                log.info('Restarted service', service=service)
+        else:
+            self._systemd.restart_service(self._service)
+            log.info('Restarted service', service=self._service)
 
 
 class ExecuteCommandAction(ConnectionAction):

@@ -52,11 +52,8 @@ class NmDbusTest(TestCase):
 
         handler = MagicMock()
 
-        # When
-        nm_dbus.add_connection_handler(handler)
-
-        # Then
-        device.connect.assert_not_called()
+        # When, Then
+        self.assertRaises(Exception, nm_dbus.add_connection_handler, handler)
 
     def test_get_active_ssid(self):
         # Given
