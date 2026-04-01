@@ -86,6 +86,7 @@ def main() -> None:
     log.info("Retrieved configuration", configuration=config)
 
     try:
+        config_dir = Path(config["config_file"]).parent
         api_server_port = int(config.get("api_server_port", 8080))
         device_role = config.get("device_role", "edge")
         device_hostname = config.get("device_hostname", "er-{{device_role}}-{{cpu_serial}}")
@@ -214,6 +215,7 @@ def main() -> None:
             connection_restore_actions, wifi_client_service, systemd, platform
         )
         connection_monitor_config = ConnectionMonitorConfig(
+            config_dir,
             connection_ping_interval,
             connection_ping_timeout,
             connection_ping_fail_limit,
@@ -222,7 +224,7 @@ def main() -> None:
         )
 
         connection_monitor = ConnectionMonitor(
-            platform, connection_monitor_timer, connection_monitor_config
+            platform, systemd, connection_monitor_timer, connection_monitor_config
         )
         wifi_control_config = WifiControlConfig(switch_fail_limit, switch_fail_command)
         wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, wifi_control_config)

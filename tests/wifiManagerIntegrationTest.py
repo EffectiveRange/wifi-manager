@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from threading import Thread
 from typing import Any, Optional
 from unittest import TestCase, mock
@@ -314,8 +315,9 @@ def setup_components(platform: IPlatformAccess, systemd: Systemd, timer: IReusab
                                                       systemd, platform)
     restore_actions = ConnectionAction.create_actions(
         ['reset-wireless', 'restart-service openvpn@*.service'], wifi_client_service, systemd, platform)
-    connection_monitor_config = ConnectionMonitorConfig(60, 5, 3, list(connect_actions), list(restore_actions))
-    connection_monitor = ConnectionMonitor(platform, MagicMock(spec=IReusableTimer), connection_monitor_config)
+    connection_monitor_config = ConnectionMonitorConfig(Path(TEST_RESOURCE_ROOT) / 'config', 60, 5, 3,
+                                                        list(connect_actions), list(restore_actions))
+    connection_monitor = ConnectionMonitor(platform, systemd, MagicMock(spec=IReusableTimer), connection_monitor_config)
     control_config = WifiControlConfig(3, "reboot")
     wifi_control = WifiControl(wifi_client_service, wifi_hotspot_service, platform, control_config)
     blink_config = BlinkConfig(500, 0, 0, 1)

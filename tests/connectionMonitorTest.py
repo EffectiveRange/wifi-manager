@@ -1,9 +1,13 @@
 import unittest
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import MagicMock
 
 from common_utility import IReusableTimer
 from context_logger import setup_logging
+from systemd_dbus import Systemd
+
+from tests import TEST_RESOURCE_ROOT
 
 from wifi_connection import ConnectionMonitor, ConnectionMonitorConfig, ConnectionAction
 from wifi_utility import IPlatformAccess
@@ -20,9 +24,9 @@ class ConnectionMonitorTest(TestCase):
 
     def test_should_start_timer_and_run_connect_actions(self):
         # Given
-        platform, timer, config = create_dependencies()
+        platform, systemd, timer, config = create_dependencies()
         config.connect_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor.start()
@@ -31,11 +35,12 @@ class ConnectionMonitorTest(TestCase):
         timer.start.assert_called_once_with(60, connection_monitor._check_connection)
         config.connect_actions[0].run.assert_called_once()
         config.connect_actions[1].run.assert_called_once()
+        systemd.restart_service.assert_called_once_with('restart-me')
 
     def test_should_cancel_timer(self):
         # Given
-        platform, timer, config = create_dependencies()
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        platform, systemd, timer, config = create_dependencies()
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor.stop()
@@ -45,11 +50,11 @@ class ConnectionMonitorTest(TestCase):
 
     def test_should_ping_default_gateway(self):
         # Given
-        platform, timer, config = create_dependencies()
+        platform, systemd, timer, config = create_dependencies()
         platform.ping_default_gateway.return_value = True
         platform.ping_tunnel_endpoint.return_value = True
         config.connect_actions = [MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor._check_connection()
@@ -62,11 +67,11 @@ class ConnectionMonitorTest(TestCase):
 
     def test_should_reset_failure_counter_and_run_connect_actions_when_ping_is_successful(self):
         # Given
-        platform, timer, config = create_dependencies()
+        platform, systemd, timer, config = create_dependencies()
         platform.ping_default_gateway.side_effect = [False, False, True]
         platform.ping_tunnel_endpoint.return_value = True
         config.connect_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor._check_connection()
@@ -79,14 +84,15 @@ class ConnectionMonitorTest(TestCase):
         self.assertEqual(0, connection_monitor._failures)
         config.connect_actions[0].run.assert_called_once()
         config.connect_actions[1].run.assert_called_once()
+        systemd.restart_service.assert_called_once_with('restart-me')
         timer.restart.assert_called()
 
     def test_should_run_connection_restore_actions_when_failed_to_ping_default_gateway(self):
         # Given
-        platform, timer, config = create_dependencies()
+        platform, systemd, timer, config = create_dependencies()
         platform.ping_default_gateway.side_effect = [False, False, False]
         config.restore_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor._check_connection()
@@ -102,11 +108,11 @@ class ConnectionMonitorTest(TestCase):
 
     def test_should_run_connection_restore_actions_when_failed_to_ping_tunnel_endpoint(self):
         # Given
-        platform, timer, config = create_dependencies()
+        platform, systemd, timer, config = create_dependencies()
         platform.ping_default_gateway.return_value = True
         platform.ping_tunnel_endpoint.side_effect = [False, False, False]
         config.restore_actions = [MagicMock(spec=ConnectionAction), MagicMock(spec=ConnectionAction)]
-        connection_monitor = ConnectionMonitor(platform, timer, config)
+        connection_monitor = ConnectionMonitor(platform, systemd, timer, config)
 
         # When
         connection_monitor._check_connection()
@@ -123,9 +129,10 @@ class ConnectionMonitorTest(TestCase):
 
 def create_dependencies():
     platform = MagicMock(spec=IPlatformAccess)
+    systemd = MagicMock(spec=Systemd)
     timer = MagicMock(spec=IReusableTimer)
-    config = ConnectionMonitorConfig(60, 5, 3, [], [])
-    return platform, timer, config
+    config = ConnectionMonitorConfig(Path(TEST_RESOURCE_ROOT) / 'config', 60, 5, 3, [], [])
+    return platform, systemd, timer, config
 
 
 if __name__ == '__main__':

@@ -49,6 +49,10 @@ class NetworkManagerDbus(IWifiDbus):
                             interface=self._interface, retry_count=retry_count)
                 time.sleep(self._retry_delay)
 
+        if not handler_added:
+            log.error('Failed to add connection handler, giving up', interface=self._interface)
+            raise Exception('Failed to add connection handler')
+
     def get_active_ssid(self) -> Optional[str]:
         if device := self._get_device():
             if ap := device.get_active_access_point():
