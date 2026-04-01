@@ -163,7 +163,7 @@ def main() -> None:
         journal = ServiceJournal(reader)
         service_dependencies = ServiceDependencies(platform, systemd, journal)
 
-        services: list[IService] = []
+        services: dict[str, IService] = {}
         wifi_client_service: WifiClientService
 
         systemd_resolved_service = SystemdResolvedService(service_dependencies)
@@ -338,7 +338,7 @@ def _update_logging(arguments: dict[str, Any], configuration: dict[str, Any]) ->
 
 
 def _init_service(
-        services: list[IService],
+        services: dict[str, IService],
         service: IService,
         is_required: bool,
         is_managed: bool = True,
@@ -346,7 +346,7 @@ def _init_service(
     if service.is_installed():
         if is_required:
             if is_managed:
-                services.append(service)
+                services[service.get_name()] = service
         else:
             service.set_force_stop(True)
     else:

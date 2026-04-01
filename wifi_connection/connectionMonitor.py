@@ -45,6 +45,9 @@ class ConnectionMonitor(IConnectionMonitor):
         self._failures = 0
         self._restart_dir = config.config_dir / 'restart.d'
 
+        if not os.path.isdir(self._restart_dir):
+            os.makedirs(self._restart_dir)
+
     def start(self) -> None:
         self._failures = 0
         self._timer.start(self._config.ping_interval, self._check_connection)
@@ -83,8 +86,11 @@ class ConnectionMonitor(IConnectionMonitor):
             action.run()
 
     def _get_connect_actions(self) -> list[ConnectionAction]:
-        services = os.listdir(str(self._restart_dir))
-        restart_actions = [RestartServiceAction(self._systemd, service) for service in services]
+        restart_actions = []
+
+        if os.path.isdir(self._restart_dir):
+            services = os.listdir(str(self._restart_dir))
+            restart_actions = [RestartServiceAction(self._systemd, service) for service in services]
 
         connect_actions = self._config.connect_actions + restart_actions
 
