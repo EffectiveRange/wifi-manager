@@ -59,6 +59,10 @@
     {
       "name": "iptables",
       "hostinstall": true
+    },
+    {
+      "name": "python3-common-utility",
+      "hostinstall": true
     }
   ]
 }
