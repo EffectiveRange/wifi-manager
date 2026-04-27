@@ -33,14 +33,6 @@
       "hostinstall": true
     },
     {
-      "name": "python3-dev",
-      "hostinstall": true
-    },
-    {
-      "name": "python3-gi",
-      "hostinstall": true
-    },
-    {
       "name": "wpasupplicant",
       "hostinstall": true
     },
@@ -58,6 +50,30 @@
     },
     {
       "name": "iptables",
+      "hostinstall": true
+    },
+    {
+      "name": "ninja-build",
+      "hostinstall": true
+    },
+    {
+      "name": "patchelf",
+      "hostinstall": true
+    },
+    {
+      "name": "meson",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-mesonpy",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-dev",
+      "hostinstall": true
+    },
+    {
+      "name": "python3-gi",
       "hostinstall": true
     },
     {
